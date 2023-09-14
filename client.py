@@ -6,6 +6,9 @@ import pathlib
 #to get cmd line args
 import sys
 
+#TODO: for .mf unpacker, options should include "create vanilla dir", "to \contentpacks"
+#TODO: for .mf unpacker, options should include which phase to unpack? checklist? in-client guide?
+
 #create a custom subclassed window
 class ShtickerpackMainWindow(QMainWindow):
     def __init__(self):
@@ -13,18 +16,18 @@ class ShtickerpackMainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("CONFIDENTIAL jk lol")
-        self.setFixedSize(600, 400)
+        self.setFixedSize(600, 100)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
 
         self.inputFileLayout1 = ShtickerpackInputTray("top")
-        self.inputFileLayout2 = ShtickerpackInputTray("middle")
-        self.inputFileLayout3 = ShtickerpackInputTray("bottom")
+        # self.inputFileLayout2 = ShtickerpackInputTray("middle")
+        # self.inputFileLayout3 = ShtickerpackInputTray("bottom")
 
         self.layout.addLayout(self.inputFileLayout1)
-        self.layout.addLayout(self.inputFileLayout2)
-        self.layout.addLayout(self.inputFileLayout3)
+        # self.layout.addLayout(self.inputFileLayout2)
+        # self.layout.addLayout(self.inputFileLayout3)
         self.mainContainer.setLayout(self.layout)
         self.setCentralWidget(self.mainContainer)
         self.show()
@@ -43,11 +46,14 @@ class ShtickerpackInputTray(QGridLayout):
         self.defaultButton = QPushButton("Use default folder")
         self.defaultButton.clicked.connect(self.setDefaultInputDir)
         self.testButton = QPushButton("Use test folder")
+        self.unpackButton = QPushButton("Unpack!")
+        self.unpackButton.clicked.connect(self.unpackTargetDir)
 
-        self.addWidget(QLabel("Phase file input location:"), 0, 0)
-        self.addWidget(self.inputDirEdit, 1, 0, 1, 3)
-        self.addWidget(self.browseButton, 0, 1)
-        self.addWidget(self.defaultButton, 0, 2)
+        self.addWidget(QLabel("Input phase file (.mf) location:"), 0, 0)
+        self.addWidget(self.inputDirEdit, 0, 1, 1, 2)
+        self.addWidget(self.browseButton, 1, 0)
+        self.addWidget(self.defaultButton, 1, 1)
+        self.addWidget(self.unpackButton, 1, 2)
     
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
@@ -62,6 +68,14 @@ class ShtickerpackInputTray(QGridLayout):
 
     def setDefaultInputDir(self):
         self.inputDirEdit.setText(self.DEFAULT_INPUT_DIR)
+    
+    def unpackTargetDir(self, target_dir: str = None, destination_dir: str = None): #async? lots of extra logic
+        target_dir = self.inputDirEdit.text()
+        packer.unpackDirectory(target_dir, destination_dir)
+        msg = QMessageBox()
+        msg.setWindowTitle("de-multify")
+        msg.setText("Directory unpacked!")
+        msg.exec()
 
 
 #QApplication object is the app, sys.argv are the cmd line args

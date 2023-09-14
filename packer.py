@@ -10,7 +10,7 @@ def _isTargetFile(fp: str) -> bool:
     Returns whether the target file is a phase file that can be unlocked and edited via a regex.
     Allows for capture of phase file name.
     """
-    return re.search("(phase_[\d\.]+_(?!models|dna|paths|luts|shaders).*)\.mf", fp)
+    return re.search("^phase_[\d\.]+_(?!models|dna|paths|luts|shaders).*$", fp)
 
 def _isTargetDir(dp: str) -> bool:
     """
@@ -29,7 +29,7 @@ def _multifyFile(dir: str, filename: str, target_dir: str=CWD_PATH):
     end = time.time()    
     print(f"Unpacked {filename}! \t took {round(end-start, 2)}s")
 
-def unpackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, destination_dir: str=CWD_PATH) -> None:
+def unpackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, destination_dir: str=CWD_PATH) -> bool:
     """
     Uses the multify tool to unpack all Panda3D multifiles in a directory.
     By default, leaves phase_X folders in the current directory. destination_dir changes this behaviour.
@@ -38,6 +38,7 @@ def unpackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, destination_dir:
     targetFileList = filter(_isTargetFile, fileList)
     for file in targetFileList:
         _multifyFile(target_dir, file, destination_dir)
+    return True
 
 def _checkTargetUnphased(targetDir) -> bool:
     """
