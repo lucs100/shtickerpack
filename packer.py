@@ -19,49 +19,74 @@ def _isTargetDir(dp: str) -> bool:
     """
     return re.search("^(phase_\d\.?\d?)$", dp)
 
-def _multify_file(dir: str, filename: str, target_dir: str=CWD_PATH):
+def _multifyFile(dir: str, filename: str, target_dir: str=CWD_PATH):
     """
     Uses the multify tool to unpack a Panda3D multifile.
-    By default, leaves phase_X folders in the current directory. target_dir changes this behaviour.
+    By default, leaves phase_X folders in the current directory. Optional target_dir changes this behaviour.
     """
     start = time.time()
     subprocess.run([MULTIFY_PATH, "-x", "-f", os.path.join(dir, filename)], shell=True, cwd=target_dir)
     end = time.time()    
     print(f"Unpacked {filename}! \t took {round(end-start, 2)}s")
 
-def unpackDirectory(dir: str = DEFAULT_TARGET_FILE_PATH, target_dir: str=CWD_PATH) -> None:
+def unpackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, destination_dir: str=CWD_PATH) -> None:
     """
     Uses the multify tool to unpack all Panda3D multifiles in a directory.
-    By default, leaves phase_X folders in the current directory. target_dir changes this behaviour.
+    By default, leaves phase_X folders in the current directory. destination_dir changes this behaviour.
     """
-    fileList: list = os.listdir(dir)
+    fileList: list = os.listdir(target_dir)
     targetFileList = filter(_isTargetFile, fileList)
     for file in targetFileList:
-        _multify_file(dir, file, target_dir)
+        _multifyFile(target_dir, file, destination_dir)
 
-def _checkTargetEmpty(targetDir) -> bool:
+def _checkTargetUnphased(targetDir) -> bool:
     """
     Ensures that phase directories will not get overwritten.
+    If any phase_X folders exist in targetDir, returns False (error). Otherwise, returns true.
     """
     objsInDir = os.listdir(targetDir)
     for obj in objsInDir:
         if _isTargetDir(obj):
             print(f"Warning: {obj} was detected as a possible existing phase file!")
+            #TODO: raise PhaseExistsException(f"warning...")?
             return False
     return True
 
 def movePhaseToDirectory(fromPath=CWD_PATH, toPath=DEFAULT_DESTINATION_PATH) -> None:
+    """
+    Moves all phase_X folders found in directory fromPath to the directory toPath.
+    Convenience function, use unpackDirectory() with parameter target_dir for less mess where possible
+    """
     folderList = os.listdir(fromPath)
     targetMoveList = filter(_isTargetDir, folderList)
     
-    if _checkTargetEmpty(toPath):
+    if _checkTargetUnphased(toPath):
         for dir in targetMoveList:
             print(f"Moving: {str.rjust('/'+dir+'/', 12)} to /{toPath}/ ...", end="")
             shutil.move(dir, toPath)
             print(" done.")
     else: print("Aborting to avoid overwrite...")
 
+def repackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "soplePack", destination_dir: str = None) -> None:
+    """
+    Repacks all phase_X folders in the target directory into a single multifile named output_name.mf.
+    Optionally, creates this file in destination_dir.
+    """
+    if destination_dir == None: destination_dir = target_dir
+    folderList = os.listdir(target_dir)
+    targetMoveList = filter(_isTargetDir, folderList)
+    targetMoveStr = "" 
+    for file in targetMoveList:
+        targetMoveStr += (f"{target_dir}/{file} ") #multify repack argument must be space-separated dir names
+    
+    print(f"Beginning repack! This will take a few seconds if you didn't purge existing assets...")
+    start = time.time()
+    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {targetMoveStr}", shell=True, cwd=destination_dir)
+    end = time.time()
+    print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
+
+
 #unpackDirectory()
 #movePhaseToDirectory()
-
-#TODO: re-multify function
+# repackDirectory("C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output", 
+#     destination_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/newTestFolder")
