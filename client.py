@@ -16,16 +16,16 @@ class ShtickerpackMainWindow(QMainWindow):
         self.setFixedSize(600, 400)
 
         self.mainContainer = QWidget()
-        self.trayWidget = QVBoxLayout()
+        self.layout = QVBoxLayout()
 
-        self.inputFileSelectTray1 = ShtickerpackInputTray("top")
-        self.inputFileSelectTray2 = ShtickerpackInputTray("middle")
-        self.inputFileSelectTray3 = ShtickerpackInputTray("bottom")
+        self.inputFileLayout1 = ShtickerpackInputTray("top")
+        self.inputFileLayout2 = ShtickerpackInputTray("middle")
+        self.inputFileLayout3 = ShtickerpackInputTray("bottom")
 
-        self.trayWidget.addLayout(self.inputFileSelectTray1)
-        self.trayWidget.addLayout(self.inputFileSelectTray2)
-        self.trayWidget.addLayout(self.inputFileSelectTray3)
-        self.mainContainer.setLayout(self.trayWidget)
+        self.layout.addLayout(self.inputFileLayout1)
+        self.layout.addLayout(self.inputFileLayout2)
+        self.layout.addLayout(self.inputFileLayout3)
+        self.mainContainer.setLayout(self.layout)
         self.setCentralWidget(self.mainContainer)
         self.show()
 
@@ -35,18 +35,19 @@ class ShtickerpackInputTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_INPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/Resources/Default"
+        self.DEFAULT_INPUT_DIR = f"C:\\Users\\{getlogin()}\\AppData\\Local\\Corporate Clash\\Resources\\Default"
 
         self.inputDirEdit = QLineEdit()
         self.browseButton = QPushButton("Select input folder...")
         self.browseButton.clicked.connect(self.openInputFileDialog)
         self.defaultButton = QPushButton("Use default folder")
         self.defaultButton.clicked.connect(self.setDefaultInputDir)
+        self.testButton = QPushButton("Use test folder")
 
-        self.addWidget(QLabel("Input folder:"), 0, 0)
-        self.addWidget(self.inputDirEdit, 0, 1)
-        self.addWidget(self.browseButton, 1, 0)
-        self.addWidget(self.defaultButton, 1, 1)
+        self.addWidget(QLabel("Phase file input location:"), 0, 0)
+        self.addWidget(self.inputDirEdit, 1, 0, 1, 3)
+        self.addWidget(self.browseButton, 0, 1)
+        self.addWidget(self.defaultButton, 0, 2)
     
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
