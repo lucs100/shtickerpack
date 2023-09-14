@@ -25,7 +25,7 @@ def _multifyFile(dir: str, filename: str, target_dir: str=CWD_PATH):
     By default, leaves phase_X folders in the current directory. Optional target_dir changes this behaviour.
     """
     start = time.time()
-    subprocess.run([MULTIFY_PATH, "-x", "-f", os.path.join(dir, filename)], shell=True, cwd=target_dir)
+    subprocess.run(f"{MULTIFY_PATH} -x -f \"{dir}/{filename}\"", shell=True, cwd=target_dir)
     end = time.time()    
     print(f"Unpacked {filename}! \t took {round(end-start, 2)}s")
 

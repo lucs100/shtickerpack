@@ -16,7 +16,7 @@ class ShtickerpackMainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("CONFIDENTIAL jk lol")
-        self.setFixedSize(600, 100)
+        self.setFixedSize(700, 100)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
@@ -38,7 +38,7 @@ class ShtickerpackInputTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_INPUT_DIR = f"C:\\Users\\{getlogin()}\\AppData\\Local\\Corporate Clash\\Resources\\Default"
+        self.DEFAULT_INPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/default"
 
         self.inputDirEdit = QLineEdit()
         self.browseButton = QPushButton("Select input folder...")
@@ -59,7 +59,7 @@ class ShtickerpackInputTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select input phase file folder...",
-            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/Resources/Default"
+            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/default"
         )
         if dir:
             path = pathlib.Path(dir)
@@ -69,8 +69,9 @@ class ShtickerpackInputTray(QGridLayout):
     def setDefaultInputDir(self):
         self.inputDirEdit.setText(self.DEFAULT_INPUT_DIR)
     
-    def unpackTargetDir(self, target_dir: str = None, destination_dir: str = None): #async? lots of extra logic
-        target_dir = self.inputDirEdit.text()
+    def unpackTargetDir(self, state: bool, target_dir: str = None, destination_dir: str = None): #async? lots of extra logic
+        if target_dir is None:          target_dir = self.inputDirEdit.text()
+        if destination_dir is None:     destination_dir = target_dir
         packer.unpackDirectory(target_dir, destination_dir)
         msg = QMessageBox()
         msg.setWindowTitle("de-multify")
