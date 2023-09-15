@@ -40,7 +40,7 @@ def unpackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, destination_dir:
         _multifyFile(target_dir, file, destination_dir)
     return True
 
-def _checkTargetUnphased(targetDir) -> bool:
+def _checkTargetUnphased(targetDir: str) -> bool:
     """
     Ensures that phase directories will not get overwritten.
     If any phase_X folders exist in targetDir, returns False (error). Otherwise, returns true.
@@ -53,6 +53,12 @@ def _checkTargetUnphased(targetDir) -> bool:
             return False
     return True
 
+def checkOutputDirectoryValid(targetDir: str) -> bool:
+    """
+    Ensures the output folder targetDir exists AND has no phase folders in it. 
+    """
+    return os.path.exists(targetDir) and _checkTargetUnphased(targetDir)
+
 def movePhaseToDirectory(fromPath=CWD_PATH, toPath=DEFAULT_DESTINATION_PATH) -> None:
     """
     Moves all phase_X folders found in directory fromPath to the directory toPath.
@@ -61,7 +67,7 @@ def movePhaseToDirectory(fromPath=CWD_PATH, toPath=DEFAULT_DESTINATION_PATH) -> 
     folderList = os.listdir(fromPath)
     targetMoveList = filter(_isTargetDir, folderList)
     
-    if _checkTargetUnphased(toPath):
+    if checkOutputDirectoryValid(toPath):
         for dir in targetMoveList:
             print(f"Moving: {str.rjust('/'+dir+'/', 12)} to /{toPath}/ ...", end="")
             shutil.move(dir, toPath)

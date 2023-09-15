@@ -98,14 +98,28 @@ class ShtickerpackInputTray(QGridLayout):
     def setDefaultOutputDir(self):
         self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
     
-    def unpackTargetDir(self, state: bool, target_dir: str = None, destination_dir: str = None): #async? lots of extra logic
-        if target_dir is None:          target_dir = self.inputDirEdit.text()
-        if destination_dir is None:     destination_dir = self.outputDirEdit.text()
-        packer.unpackDirectory(target_dir, destination_dir)
-        msg = QMessageBox()
-        msg.setWindowTitle("de-multify")
-        msg.setText("Directory unpacked!")
-        msg.exec()
+    def unpackTargetDir(self, button: QPushButton): #async? lots of extra logic
+        if self.inputDirPath.text() == "":
+            self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
+        if self.outputDirPath.text() == "":
+            self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
+        target_dir = self.inputDirPath.text()
+        destination_dir = self.outputDirPath.text()
+
+        if packer.checkOutputDirectoryValid(destination_dir):
+            button.setText("Unpacking... just a sec!")
+            packer.unpackDirectory(target_dir, destination_dir)
+            msg = QMessageBox()
+            msg.setWindowTitle("de-multify")
+            msg.setText("Directory unpacked!")
+            msg.exec()
+            button.setText("Go!")
+        else:
+            msg = QMessageBox()
+            msg.setWindowTitle("de-multify error")
+            msg.setText("The output folder doesn't exist or already has phase folders inside!")
+            msg.exec()
+
 
 
 
