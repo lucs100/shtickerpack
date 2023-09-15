@@ -2,6 +2,7 @@ import os, re, shutil, time, subprocess
 
 CWD_PATH = os.path.dirname(__file__)
 MULTIFY_PATH = os.path.join(CWD_PATH, "panda3d", "multify.exe")
+#might want to remove on release? not helpful
 DEFAULT_TARGET_FILE_PATH = os.path.join(CWD_PATH, "test", "example_files")
 DEFAULT_DESTINATION_PATH = os.path.join(CWD_PATH, "test", "example_output")
 
@@ -92,8 +93,14 @@ def repackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str
     end = time.time()
     print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
 
+def prepVanilla(vanilla_dir: str) -> bool:
+    if not os.path.exists(vanilla_dir):
+        os.mkdir(vanilla_dir)
+        return True
+    return False
 
-#unpackDirectory()
-#movePhaseToDirectory()
-# repackDirectory("C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output", 
-#     destination_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/newTestFolder")
+if __name__ == "__main__":
+    unpackDirectory()
+    movePhaseToDirectory()
+    repackDirectory("C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output", 
+        destination_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/newTestFolder")
