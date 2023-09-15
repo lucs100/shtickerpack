@@ -16,7 +16,7 @@ class ShtickerpackMainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("CONFIDENTIAL jk lol")
-        self.setFixedSize(700, 100)
+        self.setFixedSize(1000, 100)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
@@ -39,21 +39,36 @@ class ShtickerpackInputTray(QGridLayout):
 
         self.identifier = identifier
         self.DEFAULT_INPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/default"
+        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/vanilla"
 
-        self.inputDirEdit = QLineEdit()
-        self.browseButton = QPushButton("Select input folder...")
-        self.browseButton.clicked.connect(self.openInputFileDialog)
-        self.defaultButton = QPushButton("Use default folder")
-        self.defaultButton.clicked.connect(self.setDefaultInputDir)
-        self.testButton = QPushButton("Use test folder")
-        self.unpackButton = QPushButton("Unpack!")
-        self.unpackButton.clicked.connect(self.unpackTargetDir)
+        self.inputDirPath = QLineEdit()
+        self.inputBrowseButton = QPushButton("Select input folder...")
+        self.inputBrowseButton.clicked.connect(self.openInputFileDialog)
+        self.defaultInputButton = QPushButton("Use default folder (Recommended)")
+        self.defaultInputButton.clicked.connect(self.setDefaultInputDir)
 
-        self.addWidget(QLabel("Input phase file (.mf) location:"), 0, 0)
-        self.addWidget(self.inputDirEdit, 0, 1, 1, 2)
-        self.addWidget(self.browseButton, 1, 0)
-        self.addWidget(self.defaultButton, 1, 1)
-        self.addWidget(self.unpackButton, 1, 2)
+        self.outputDirPath = QLineEdit()
+        self.outputBrowseButton = QPushButton("Select output folder...")
+        self.outputBrowseButton.clicked.connect(self.openOutputFileDialog)
+        self.defaultOutputButton = QPushButton("Use vanilla folder (Recommended)")
+        self.defaultOutputButton.clicked.connect(self.setDefaultOutputDir)
+        
+        self.unpackButton = QPushButton("Go!")
+        self.unpackButton.clicked.connect(lambda:self.unpackTargetDir(self.unpackButton))
+
+        self.addWidget(QLabel("Get phase files (.mf) from:"), 0, 0)
+        self.addWidget(QLabel("Place phase folders in:"), 1, 0)
+        self.addWidget(self.inputDirPath, 0, 1, 1, 2)
+        self.addWidget(self.outputDirPath, 1, 1, 1, 2)
+
+        self.addWidget(self.defaultInputButton, 2, 0, 1, 2)
+        self.addWidget(self.defaultOutputButton, 2, 2, 1, 2)
+        
+        self.addWidget(self.inputBrowseButton, 0, 3)
+        self.addWidget(self.outputBrowseButton, 1, 3)
+
+        self.addWidget(self.unpackButton, 0, 4, 3, 1)
+        self.unpackButton.setMaximumHeight(999)
     
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
@@ -63,20 +78,35 @@ class ShtickerpackInputTray(QGridLayout):
         )
         if dir:
             path = pathlib.Path(dir)
-            self.inputDirEdit.setText(str(path))
+            self.inputDirPath.setText(str(path))
+            print(f"Selected {path} in tray {self.identifier}")
+
+    def openOutputFileDialog(self):
+        dir = QFileDialog.getExistingDirectory(
+            None,
+            caption = "Select output phase file folder...",
+            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
+        )
+        if dir:
+            path = pathlib.Path(dir)
+            self.outputDirPath.setText(str(path))
             print(f"Selected {path} in tray {self.identifier}")
 
     def setDefaultInputDir(self):
-        self.inputDirEdit.setText(self.DEFAULT_INPUT_DIR)
+        self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
+
+    def setDefaultOutputDir(self):
+        self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
     
     def unpackTargetDir(self, state: bool, target_dir: str = None, destination_dir: str = None): #async? lots of extra logic
         if target_dir is None:          target_dir = self.inputDirEdit.text()
-        if destination_dir is None:     destination_dir = target_dir
+        if destination_dir is None:     destination_dir = self.outputDirEdit.text()
         packer.unpackDirectory(target_dir, destination_dir)
         msg = QMessageBox()
         msg.setWindowTitle("de-multify")
         msg.setText("Directory unpacked!")
         msg.exec()
+
 
 
 #QApplication object is the app, sys.argv are the cmd line args
