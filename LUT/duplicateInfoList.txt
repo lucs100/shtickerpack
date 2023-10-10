@@ -88,7 +88,7 @@ C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_
 stripeB5.png
 C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\maps/stripeB5.png
 C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_5.5\maps/stripeB5.png
-(2)
+(1)
 *Extremely similar??? First is 512x8x8, second is 512x8x24... seems close enough
 
 Golf_Crowd_Miss.ogg
