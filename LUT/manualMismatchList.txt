@@ -1,0 +1,98 @@
+clock03.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3\audio\sfx/clock03.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\audio\sfx/clock03.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\audio\sfx/clock03.ogg
+(1)
+
+cog.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3\maps/cog.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\maps\loading/cog.png
+(3)
+*One is an icon, one is a loading screen. Resolutions differ.
+
+AA_drop_anvil_miss.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\audio\sfx/AA_drop_anvil_miss.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\audio\sfx/AA_drop_anvil_miss.ogg
+(2)
+*One is higher quality? Sigh
+
+avatar_emotion_taunt.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\audio\sfx/avatar_emotion_taunt.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\audio\sfx/avatar_emotion_taunt.ogg
+(2)
+*One includes the ding.
+
+MG_win.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\audio\sfx/MG_win.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\audio\sfx/MG_win.ogg
+(2)
+*One is higher quality? Sigh
+
+box_side1.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\maps/box_side1.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/box_side1.png
+(3)
+*One is much higher resolution.
+
+grass.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\maps/grass.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/grass.png
+(1)
+
+shirt_Sleeve_pumkin.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps\halloween\pumkin_shirt/shirt_Sleeve_pumkin.png     
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/shirt_Sleeve_pumkin.png
+(1)
+
+toontown_central_common_palette_4amla_1.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3\maps/toontown_central_common_palette_4amla_1.png        
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/toontown_central_common_palette_4amla_1.png 
+(2)
+*One is higher quality, but the resolution is the same.
+
+tt_t_chr_avt_acc_sho_athleticGreen.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3\maps/tt_t_chr_avt_acc_sho_athleticGreen.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/tt_t_chr_avt_acc_sho_athleticGreen.png
+(1)
+
+tt_t_chr_avt_acc_sho_docMartinBootsGreen.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3\maps/tt_t_chr_avt_acc_sho_docMartinBootsGreen.png       
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/tt_t_chr_avt_acc_sho_docMartinBootsGreen.png 
+(1)
+*Very slightly different, but close enough.
+
+tt_t_chr_avt_acc_sho_docMartinBootsGreenLL.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3\maps/tt_t_chr_avt_acc_sho_docMartinBootsGreenLL.png     
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/tt_t_chr_avt_acc_sho_docMartinBootsGreenLL.png
+(1)
+*Very slightly different, but close enough.
+
+tt_t_chr_avt_skirt_halloween2.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps\halloween\supertoon_outfit/tt_t_chr_avt_skirt_halloween2.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\maps/tt_t_chr_avt_skirt_halloween2.png
+(2)
+*Slightly different, one has an ST emblem. Need to compare.
+
+stripeB2.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_5\maps/stripeB2.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_5.5\maps/stripeB2.png
+(3)
+*Similar, but very different resolution.
+
+stripeB4.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_5\maps/stripeB4.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_5.5\maps/stripeB4.png
+(3)
+*Similar, but very different resolution.
+
+stripeB5.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_3.5\maps/stripeB5.png
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_5.5\maps/stripeB5.png
+(1)
+*Extremely similar??? First is 512x8x8, second is 512x8x24... seems close enough
+
+Golf_Crowd_Miss.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_4\audio\sfx/Golf_Crowd_Miss.ogg
+C:\Users\Lucas\Documents\projects\Python\shtickerpack\test\example_output\phase_6\audio\sfx/Golf_Crowd_Miss.ogg
+(2)
+*Close enough. 4\ has a "trill" noise about halfway through, not sure which is actually used.
