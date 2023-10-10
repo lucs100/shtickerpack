@@ -85,7 +85,7 @@ def dumpList(source: "list[LUTFile]"):
                 "fp": [file.path],
                 "warning_level": file.warningLevel
             }
-    with open("./LUT/temp_lut.json", 'w+') as file:
+    with open("./temp_lut.json", 'w+') as file:
         file.write(json.dumps(outputJson, indent=4))
 
 recursiveAddFiles(phase)
