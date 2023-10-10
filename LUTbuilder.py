@@ -1,8 +1,8 @@
-import pathlib, filecmp, typing
+import pathlib, filecmp, typing, json
 
-path = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output"
+pathToPhase = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output"
 
-phase = pathlib.Path(path)
+phase = pathlib.Path(pathToPhase)
 
 #yeah, manual unfortunately.
 LEVEL_1_LIST = ["clock03.ogg", "grass.png", "shirt_Sleeve_pumkin.png", "tt_t_chr_avt_acc_sho_athleticGreen.png", "tt_t_chr_avt_acc_sho_docMartinBootsGreen.png", "tt_t_chr_avt_acc_sho_docMartinBootsGreenLL.png"]
@@ -13,7 +13,7 @@ class LUTFile:
     def __init__(self, file: pathlib.Path):
         if file.is_file():
             self.name = file.name
-            self.path = file.parent
+            self.path = '/'.join(file.parent.parts[9:]) #hacky method to remove 
             self.warningLevel = 0
             #0 = unique file, standard case
             #1 = identical file used elsewhere - replace both
@@ -23,7 +23,7 @@ class LUTFile:
             self = None
     
     def fullPath(self):
-        return f"{self.path}/{self.name}"
+        return f"{pathToPhase}/{self.path}/{self.name}"
     
     def __repr__(self) -> str:
         return self.fullPath()
@@ -46,12 +46,13 @@ def conditionalAppend(file: LUTFile):
     if result := filenameInList(file):
         fileA, fileB = result
         if checkFilesEqual(fileA, fileB):
-            print(f"Equal duplicate found!\n{fileA}\n{fileB}\n")
+            #print(f"Equal duplicate found!\n{fileA}\n{fileB}\n")
             fileA.warningLevel = 1
             fileB.warningLevel = 1
         else:
-            print(f"Non-equal duplicate found.\t{fileA.name}\n{fileA}\n{fileB}\nBad :( ")
+            #print(f"Non-equal duplicate found.\t{fileA.name}\n{fileA}\n{fileB}\nBad :( ")
             if fileA.name in LEVEL_1_LIST:
+                #some files are not EXACTLY equal but are still minimal enough to be a level 1
                 fileA.warningLevel = 1
                 fileB.warningLevel = 1
             elif fileA.name in LEVEL_2_LIST:
@@ -74,4 +75,18 @@ def recursiveAddFiles(pathItem: pathlib.Path):
         if item.is_file():
             conditionalAppend(LUTFile(item))
 
+def dumpList(source: "list[LUTFile]"):
+    outputJson = {}
+    for file in source:
+        if file.name in outputJson.keys():
+            outputJson[file.name]["fp"].append(file.path) 
+        else:
+            outputJson[file.name] = {
+                "fp": [file.path],
+                "warning_level": file.warningLevel
+            }
+    with open("./LUT/temp_lut.json", 'w+') as file:
+        file.write(json.dumps(outputJson, indent=4))
+
 recursiveAddFiles(phase)
+dumpList(fileList)
