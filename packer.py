@@ -1,10 +1,15 @@
-import os, re, shutil, time, subprocess
+import os, re, shutil, time, subprocess, json, pathlib
 
 CWD_PATH = os.path.dirname(__file__)
 MULTIFY_PATH = os.path.join(CWD_PATH, "panda3d", "multify.exe")
 #might want to remove on release? not helpful
 DEFAULT_TARGET_FILE_PATH = os.path.join(CWD_PATH, "test", "example_files")
 DEFAULT_DESTINATION_PATH = os.path.join(CWD_PATH, "test", "example_output")
+PHASE_LUT = {}
+
+class TTScaryFileException(Exception):
+    def __init__(self, message):
+        super.__init__(message)
 
 def _isTargetFile(fp: str) -> bool:
     """
@@ -99,8 +104,46 @@ def prepVanilla(vanilla_dir: str) -> bool:
         return True
     return False
 
+def loadLUT(fp: str) -> dict:
+    with open(fp, 'r') as file:
+        return json.loads(file)
+
+def moveFileToPhaseStructure(filename: str, cwd: str):
+    """Accepts one file filename in the directory cwd. If it exists in the file LUT, moves it to the
+    expected phase path, creating the files where neccesary."""
+    global PHASE_LUT
+    cwd = pathlib.path(cwd)
+    errorFiles = {1:[], 2:[], 3:[]}
+    if filename in PHASE_LUT:
+
+        filepaths = PHASE_LUT[filename]['fp']
+        fileWarningLevel = PHASE_LUT[filename]['warning_level']
+
+        if fileWarningLevel in [0, 1, 2]:
+            for path in filepaths:
+                tgtPath = cwd / pathlib.Path(path)
+                if not tgtPath.exists():
+                    tgtPath.mkdir()
+                fromPath = cwd / filename
+                shutil.move(fromPath, tgtPath)
+            if fileWarningLevel > 0:
+                errorFiles[fileWarningLevel].append(filename)
+        elif fileWarningLevel == 3:
+            raise TTScaryFileException(f"{filename} is a level 3 file, which are not implemented yet.")
+
+def moveAllToPhaseStructure(cwd: str):
+    """Moves all loose files in a directory cwd to their expected phase paths, 
+    creating theme where neccesary."""
+    for item in pathlib.Path(cwd).iterdir():
+        if item.is_file():
+            moveFileToPhaseStructure(item.name, cwd)
+
 if __name__ == "__main__":
-    unpackDirectory()
-    movePhaseToDirectory()
-    repackDirectory("C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output", 
-        destination_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/newTestFolder")
+    #used for testing
+    # unpackDirectory()
+    # movePhaseToDirectory()
+    # repackDirectory("C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output", 
+    #     destination_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/newTestFolder")
+    PHASE_LUT = loadLUT("./lut/file_lut.json")
+    targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output"
+    moveAllToPhaseStructure(targetDir)
