@@ -95,25 +95,28 @@ def spaceDelimit(file_list: list, base_dir: str="") -> str:
         file_list = list(file_list)
     targetMoveStr = "" 
     for file in file_list:
-        targetMoveStr += (f"{base_dir}/{file} ") #multify repack argument must be space-separated dir names
-    return targetMoveStr
+        if base_dir == "":  targetMoveStr += (f"{file} ") #multify repack argument must be space-separated dir names
+        else:               targetMoveStr += (f"{base_dir}/{file} ") 
+    return targetMoveStr.strip()
 
 def repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_name: str = "defaultPackName", output_dir: str = None):
     """
     Manually repacks all folders specified in the file_list parameter. Can be str or simple iterable.
+    Moves the output file to output_dir if specified (leaves in-place by default).
     """
-    if output_dir == None: output_dir = cwd
     if not isinstance(file_list, str): #assume iterable 
-        file_list = spaceDelimit(file_list, base_dir=cwd)
+        file_list = spaceDelimit(file_list) #no base_dir, as we're in the right cwd
     if file_list == "": return # no files passed
     
     prepDir(output_dir)
     
-    print(f"Beginning repack! This will take a few seconds if you didn't purge existing assets...")
+    print(f"Beginning repack! This may take a few seconds...")
     start = time.time()
-    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list}", shell=True, cwd=output_dir)
+    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list}", shell=True, cwd=cwd)
     end = time.time()
     print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
+    if output_dir != None:
+        shutil.move(f"{cwd}/{output_name}.mf", output_dir)
 
 def repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "defaultPackName", output_dir: str = None) -> None:
     """
@@ -162,10 +165,10 @@ def moveFileToPhaseStructure(filename: str, cwd: str):
         
         return [pathlib.Path(fp).parts[0] for fp in filepaths] #all phase_x folders
 
-def repackAllLooseFiles(cwd: str, output_dir = DEFAULT_DESTINATION_PATH, output_name = "defaultPackName", strictMode: bool = True):
+def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", strictMode: bool = True):
     """
     Moves all loose files in a directory cwd to their expected phase paths, 
-    creating them where neccesary. If targetDir is passed, moves the resulting file to that directory.
+    creating them where neccesary. If output_dir is passed, moves the resulting file to that directory.
     strictMode moves only altered phase folders. outputName sets the output .mf filename (defaults to in-place).
     """
     #TODO: recursive mode
@@ -182,10 +185,8 @@ if __name__ == "__main__":
     #used for testing
     # unpackDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_files", output_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output")
     # movePhaseToDirectory()
-    repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output", output_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/newTestFolder")
+    # repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output")
     
     # PHASE_LUT = loadLUT("./lut/file_lut.json")
     # targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files"
-    # repackAllLooseFiles(cwd=targetDir, 
-    #     output_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files_packed",
-    #     output_name="loosePackTest")
+    # repackAllLooseFiles(cwd=targetDir, output_name="loosePackTest")
