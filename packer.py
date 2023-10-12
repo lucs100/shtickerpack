@@ -137,33 +137,43 @@ def loadLUT(fp: str) -> dict:
     with open(fp, 'r') as file:
         return json.loads(file.read())
 
-def moveFileToPhaseStructure(filename: str, cwd: str):
+class phasePackResult:
+    def __init__(self, folders: list = [], warnings: "dict[str: int]" = {}):
+        self.folders: list = folders
+        self.warnings: "dict[str: int]" = warnings
+
+def moveFileToPhaseStructure(filename: str, cwd: str) -> phasePackResult:
     """
     Accepts one file filename in the directory cwd. If it exists in the file LUT, moves it to the
     expected phase path, creating the files where neccesary. Returns the top-level destination names.
     """
     global PHASE_LUT
     cwd = pathlib.Path(cwd)
-    errorFiles = {1:[], 2:[], 3:[]}
+    result = phasePackResult()
     if filename in PHASE_LUT:
 
         filepaths = PHASE_LUT[filename]['fp']
         fileWarningLevel = PHASE_LUT[filename]['warning_level']
 
         if fileWarningLevel in [0, 1, 2]:
+            moved = False
             for path in filepaths:
                 tgtPath = cwd / pathlib.Path(path)
                 if not tgtPath.exists():
                     tgtPath.mkdir(parents=True)
                 fromPath = cwd / filename
-                shutil.move(str(fromPath), str(tgtPath))
-            if fileWarningLevel > 0:
-                errorFiles[fileWarningLevel].append(filename)
-        elif fileWarningLevel == 3:
-            raise TTScaryFileException(f"{filename} is a level 3 file, which are not implemented yet.")
+                shutil.copy(str(fromPath), str(tgtPath))
+                moved = True
+            if moved: os.remove(str(fromPath)) #DONT del unmoved files
+        if fileWarningLevel > 0:
+            result.warnings[filename] = fileWarningLevel
+        #elif fileWarningLevel == 3:
+            #raise TTScaryFileException(f"{filename} is a level 3 file, which are not implemented yet.")
             #case-by-case, sadly
+            #TODO: level 3 logic
         
-        return [pathlib.Path(fp).parts[0] for fp in filepaths] #all phase_x folders
+        result.folders = [pathlib.Path(fp).parts[0] for fp in filepaths] #all phase_x folders
+        return result
 
 def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", strictMode: bool = True):
     """
@@ -175,8 +185,10 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     changedDirs = set()
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
-            newDirs = moveFileToPhaseStructure(item.name, cwd)
-            changedDirs.update(newDirs)
+            result = moveFileToPhaseStructure(item.name, cwd)
+            changedDirs.update(result.folders)
+            for file, level in result.warnings.items():
+                print(f"Level {level} warning: {file}")
     if strictMode:  repackList(cwd=cwd, file_list=changedDirs, output_dir=output_dir, output_name=output_name)
     else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name)   
 
