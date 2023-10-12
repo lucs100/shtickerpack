@@ -9,6 +9,8 @@ import sys
 #TODO: for .mf unpacker, options should include "create vanilla dir", "to \contentpacks"
 #TODO: for .mf unpacker, options should include which phase to unpack? checklist? in-client guide?
 
+
+
 #create a custom subclassed window
 class ShtickerpackMainWindow(QMainWindow):
     def __init__(self):
@@ -16,21 +18,28 @@ class ShtickerpackMainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("CONFIDENTIAL jk lol")
-        self.setFixedSize(1000, 100)
+        self.setFixedSize(1000, 300)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
 
-        self.inputFileLayout1 = ShtickerpackInputTray("top")
-        # self.inputFileLayout2 = ShtickerpackInputTray("middle")
-        # self.inputFileLayout3 = ShtickerpackInputTray("bottom")
+        self.inputFilePanel1 = ShtickerpackInputTray("top")
+        self.inputGroup1 = ShtickerpackTitledPanel(self.inputFilePanel1, "Input Panel 1")
+        self.layout.addWidget(self.inputGroup1)
 
-        self.layout.addLayout(self.inputFileLayout1)
-        # self.layout.addLayout(self.inputFileLayout2)
-        # self.layout.addLayout(self.inputFileLayout3)
+        self.inputFilePanel2 = ShtickerpackInputTray("bottom")
+        self.inputGroup2 = ShtickerpackTitledPanel(self.inputFilePanel2, "Input Panel 2")
+        self.layout.addWidget(self.inputGroup2)
+
         self.mainContainer.setLayout(self.layout)
         self.setCentralWidget(self.mainContainer)
         self.show()
+
+
+class ShtickerpackTitledPanel(QGroupBox):
+    def __init__(self, layout: QGridLayout, title: str):
+        super().__init__(title) #sets title to identifier
+        self.setLayout(layout)
 
 
 class ShtickerpackInputTray(QGridLayout):
