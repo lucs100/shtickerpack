@@ -17,19 +17,23 @@ class ShtickerpackMainWindow(QMainWindow):
         #call the init method of QMainWindow
         super().__init__()
 
-        self.setWindowTitle("CONFIDENTIAL jk lol")
-        self.setFixedSize(1000, 300)
+        self.setWindowTitle("shtickerpack beta")
+        self.resize(1000, 400)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
 
-        self.inputFilePanel1 = ShtickerpackInputTray("top")
-        self.inputGroup1 = ShtickerpackTitledPanel(self.inputFilePanel1, "Input Panel 1")
-        self.layout.addWidget(self.inputGroup1)
+        self.unpackPanel = ShtickerpackUnpackTray()
+        self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
+        self.layout.addWidget(self.unpackGroup)
 
-        self.inputFilePanel2 = ShtickerpackInputTray("bottom")
-        self.inputGroup2 = ShtickerpackTitledPanel(self.inputFilePanel2, "Input Panel 2")
-        self.layout.addWidget(self.inputGroup2)
+        self.inputFilePanel = ShtickerpackRepackTray()
+        self.inputGroup = ShtickerpackTitledPanel(self.inputFilePanel, "Project setup")
+        self.layout.addWidget(self.inputGroup)
+
+        self.inputFilePanel = ShtickerpackRepackTray()
+        self.inputGroup = ShtickerpackTitledPanel(self.inputFilePanel, "Repack assets into .mf files")
+        self.layout.addWidget(self.inputGroup)
 
         self.mainContainer.setLayout(self.layout)
         self.setCentralWidget(self.mainContainer)
@@ -41,42 +45,64 @@ class ShtickerpackTitledPanel(QGroupBox):
         super().__init__(title) #sets title to identifier
         self.setLayout(layout)
 
+class ShtickerpackProjectSetupTray(QGridLayout):
+    def __init__(self, identifier: str = "ProjectSetupTray"):
+        super().__init__()
 
-class ShtickerpackInputTray(QGridLayout):
-    def __init__(self, identifier: str):
+        self.identifier = identifier
+        self.helplabel = QLabel("Place all your ")
+
+class ShtickerpackRepackTray(QGridLayout):
+    def __init__(self, identifier: str = "RepackTray"):
+        super().__init__()
+
+        self.identifier = identifier
+        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
+
+class ShtickerpackUnpackTray(QGridLayout):
+    def __init__(self, identifier: str = "UnpackTray"):
         super().__init__()
 
         self.identifier = identifier
         self.DEFAULT_INPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/default"
         self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/vanilla"
 
+        self.inputDirHint = QLabel("Get phase files (.mf) from:")
+        self.inputDirHint.setFixedWidth(150)
         self.inputDirPath = QLineEdit()
         self.inputBrowseButton = QPushButton("Select input folder...")
         self.inputBrowseButton.clicked.connect(self.openInputFileDialog)
-        self.defaultInputButton = QPushButton("Use default folder (Recommended)")
+        self.defaultInputButton = QPushButton("Use default input folder")
         self.defaultInputButton.clicked.connect(self.setDefaultInputDir)
 
+        self.outputDirHint = QLabel("Place output folders in:")
+        self.outputDirHint.setFixedWidth(150)
         self.outputDirPath = QLineEdit()
         self.outputBrowseButton = QPushButton("Select output folder...")
         self.outputBrowseButton.clicked.connect(self.openOutputFileDialog)
-        self.defaultOutputButton = QPushButton("Use vanilla folder (Recommended)")
+        self.defaultOutputButton = QPushButton("Use vanilla output folder")
         self.defaultOutputButton.clicked.connect(self.setDefaultOutputDir)
+
+        self.defaultHybridButton = QPushButton("Use default folders (Reccomended)")
+        self.defaultHybridButton.clicked.connect(self.setDefaultInputDir)
+        self.defaultHybridButton.clicked.connect(self.setDefaultOutputDir)
         
         self.unpackButton = QPushButton("Go!")
         self.unpackButton.clicked.connect(lambda:self.unpackTargetDir(self.unpackButton))
 
-        self.addWidget(QLabel("Get phase files (.mf) from:"), 0, 0)
-        self.addWidget(QLabel("Place phase folders in:"), 1, 0)
+        self.addWidget(self.inputDirHint, 0, 0)
+        self.addWidget(self.outputDirHint, 1, 0)
         self.addWidget(self.inputDirPath, 0, 1, 1, 2)
         self.addWidget(self.outputDirPath, 1, 1, 1, 2)
 
-        self.addWidget(self.defaultInputButton, 2, 0, 1, 2)
-        self.addWidget(self.defaultOutputButton, 2, 2, 1, 2)
+        self.addWidget(self.defaultHybridButton, 2, 0, 1, 4)
+        self.addWidget(self.defaultInputButton, 3, 0, 1, 2)
+        self.addWidget(self.defaultOutputButton, 3, 2, 1, 2)
         
         self.addWidget(self.inputBrowseButton, 0, 3)
         self.addWidget(self.outputBrowseButton, 1, 3)
 
-        self.addWidget(self.unpackButton, 0, 4, 3, 1)
+        self.addWidget(self.unpackButton, 0, 4, 4, 1)
         self.unpackButton.setMaximumHeight(999)
     
     def openInputFileDialog(self):
@@ -114,10 +140,11 @@ class ShtickerpackInputTray(QGridLayout):
         if self.outputDirPath.text() in ["", self.DEFAULT_OUTPUT_DIR]: #force vanilla dupe case
             self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
             if not engine.prepDir(self.DEFAULT_OUTPUT_DIR):
-                #is this neccesary?
-                msg = QMessageBox.warning(None, "de-multify error",
-                    "You already have a vanilla folder. Rename it or choose a different folder")
-                return
+                #is this neccesary? not rn
+                pass
+                # msg = QMessageBox.warning(None, "de-multify error",
+                #     "You already have a vanilla folder. Rename it or choose a different folder.")
+                # return
 
         target_dir = self.inputDirPath.text()
         destination_dir = self.outputDirPath.text()
@@ -130,6 +157,7 @@ class ShtickerpackInputTray(QGridLayout):
         else:
             msg = QMessageBox.critical(None, "de-multify error", 
                 "The output folder doesn't exist or already has phase folders inside!")
+
 
 
 
