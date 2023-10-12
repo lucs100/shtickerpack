@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import *
+from PyQt6.QtGui import QIcon
 import engine
 from os import getlogin
 import pathlib
@@ -9,7 +10,10 @@ import sys
 #TODO: for .mf unpacker, options should include "create vanilla dir", "to \contentpacks"
 #TODO: for .mf unpacker, options should include which phase to unpack? checklist? in-client guide?
 
-
+#dummy syscall to get taskbar icon LOL
+import ctypes
+myappid = 'shtickerpack' # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 #create a custom subclassed window
 class ShtickerpackMainWindow(QMainWindow):
@@ -17,7 +21,8 @@ class ShtickerpackMainWindow(QMainWindow):
         #call the init method of QMainWindow
         super().__init__()
 
-        self.setWindowTitle("shtickerpack beta")
+        self.setWindowTitle("shtickerpack alpha")
+        self.setWindowIcon(QIcon("shtickerpack.png"))
         self.resize(1000, 400)
 
         self.mainContainer = QWidget()
@@ -27,9 +32,10 @@ class ShtickerpackMainWindow(QMainWindow):
         self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
         self.layout.addWidget(self.unpackGroup)
 
-        self.inputFilePanel = ShtickerpackRepackTray()
-        self.inputGroup = ShtickerpackTitledPanel(self.inputFilePanel, "Project setup")
-        self.layout.addWidget(self.inputGroup)
+        self.infoPanel = ShtickerpackProjectSetupTray()
+        self.infoGroup = ShtickerpackTitledPanel(self.infoPanel, "Repacking instructions")
+        self.infoGroup.setFixedHeight(80)
+        self.layout.addWidget(self.infoGroup)
 
         self.inputFilePanel = ShtickerpackRepackTray()
         self.inputGroup = ShtickerpackTitledPanel(self.inputFilePanel, "Repack assets into .mf files")
@@ -50,7 +56,12 @@ class ShtickerpackProjectSetupTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.helplabel = QLabel("Place all your ")
+        self.helpLabel = QLabel(("Place all files you've changed in the same folder (ex. <b><code>/myContentPack/</code></b>). " +
+                                "Then, select that folder in the Repack Assets tray below. <br>" +
+                                "shtickerpack will automatically place each file where it needs to go, " +
+                                "pack your changes into a .mf file, and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b> for use."))
+
+        self.addWidget(self.helpLabel, 0, 0)
 
 class ShtickerpackRepackTray(QGridLayout):
     def __init__(self, identifier: str = "RepackTray"):
@@ -83,7 +94,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         self.defaultOutputButton = QPushButton("Use vanilla output folder")
         self.defaultOutputButton.clicked.connect(self.setDefaultOutputDir)
 
-        self.defaultHybridButton = QPushButton("Use default folders (Reccomended)")
+        self.defaultHybridButton = QPushButton("Use default folders (Recommended)")
         self.defaultHybridButton.clicked.connect(self.setDefaultInputDir)
         self.defaultHybridButton.clicked.connect(self.setDefaultOutputDir)
         
