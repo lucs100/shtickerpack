@@ -108,7 +108,7 @@ def repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_
         file_list = spaceDelimit(file_list) #no base_dir, as we're in the right cwd
     if file_list == "": return # no files passed
     
-    prepDir(output_dir)
+    if output_dir != None: prepDir(output_dir)
     
     print(f"Beginning repack! This may take a few seconds...")
     start = time.time()
@@ -187,6 +187,6 @@ if __name__ == "__main__":
     # movePhaseToDirectory()
     # repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output")
     
-    # PHASE_LUT = loadLUT("./lut/file_lut.json")
-    # targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files"
-    # repackAllLooseFiles(cwd=targetDir, output_name="loosePackTest")
+    PHASE_LUT = loadLUT("./lut/file_lut.json")
+    targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files"
+    repackAllLooseFiles(cwd=targetDir, output_name="loosePackTest")
