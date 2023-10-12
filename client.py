@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import *
-import packer
+import engine
 from os import getlogin
 import pathlib
 
@@ -113,7 +113,7 @@ class ShtickerpackInputTray(QGridLayout):
             self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
         if self.outputDirPath.text() in ["", self.DEFAULT_OUTPUT_DIR]: #force vanilla dupe case
             self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
-            if not packer.prepDir(self.DEFAULT_OUTPUT_DIR):
+            if not engine.prepDir(self.DEFAULT_OUTPUT_DIR):
                 #is this neccesary?
                 msg = QMessageBox.warning(None, "de-multify error",
                     "You already have a vanilla folder. Rename it or choose a different folder")
@@ -122,9 +122,9 @@ class ShtickerpackInputTray(QGridLayout):
         target_dir = self.inputDirPath.text()
         destination_dir = self.outputDirPath.text()
 
-        if packer.checkOutputDirectoryValid(destination_dir):
+        if engine.checkOutputDirectoryValid(destination_dir):
             button.setText("Unpacking... just a sec!")
-            packer.unpackDirectory(target_dir, destination_dir)
+            engine.unpackDirectory(target_dir, destination_dir)
             msg = QMessageBox.information(None, "de-multify", "Folder unpacked!")
             button.setText("Go!")
         else:

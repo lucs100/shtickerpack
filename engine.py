@@ -187,11 +187,12 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd)
             changedDirs.update(result.folders)
+            #maxWarningLevel = max(result.warnings.values())
             for file, level in result.warnings.items():
                 print(f"Level {level} warning: {file}")
     if strictMode:  repackList(cwd=cwd, file_list=changedDirs, output_dir=output_dir, output_name=output_name)
     else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name)   
-
+    return result
 
 if __name__ == "__main__":
     #used for testing
