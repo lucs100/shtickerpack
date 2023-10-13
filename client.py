@@ -83,7 +83,9 @@ class ShtickerpackRepackTray(QGridLayout):
         self.defaultInputButton.setDisabled(True)
 
         self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
+        self.delFolderModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFolderModeBox))
         self.delFilesModeBox = QCheckBox("Delete asset files when done")
+        self.delFilesModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFilesModeBox))
         self.moveOutputModeBox = QCheckBox("Move output to Clash resources when done") #todo: warning when deselected
         self.moveOutputModeBox.setChecked(True)
 
@@ -139,6 +141,23 @@ class ShtickerpackRepackTray(QGridLayout):
 
     # def setDefaultOutputDir(self):
     #     self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
+
+    def deleteModeWarning(self, button: QCheckBox):
+        msgData = { #folder, file
+            False: {
+                False: (None, None),
+                True: (QMessageBox.warning, "This will delete your loose asset files once complete. They'll still be available in the generated phase folders and multifile. Is this OK?")
+            },
+            True: {
+                False: (QMessageBox.warning, "This will delete generated folders once complete. Your asset files won't be deleted. Is this OK?"),
+                True: (QMessageBox.critical, "This will delete loose asset files AND generated folders once complete. They'll still be available in the generated multifile, but you'll have to unpack it manually <b>(which can be annoying)</b>. Is this OK?")
+            }
+        }
+        messageType, messageStr = msgData[self.delFolderModeBox.isChecked()][self.delFilesModeBox.isChecked()] #this is the best thing i have ever written
+        if button.checkState():
+            result = messageType(None, "Note!", messageStr, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            if result == QMessageBox.StandardButton.No:
+                button.setChecked(False)
                 
 
 
