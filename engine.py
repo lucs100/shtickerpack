@@ -142,7 +142,7 @@ class phasePackResult:
         self.folders: list = folders
         self.warnings: "dict[str: int]" = warnings
 
-def moveFileToPhaseStructure(filename: str, cwd: str) -> phasePackResult:
+def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False) -> phasePackResult:
     """
     Accepts one file filename in the directory cwd. If it exists in the file LUT, moves it to the
     expected phase path, creating the files where neccesary. Returns the top-level destination names.
@@ -164,7 +164,7 @@ def moveFileToPhaseStructure(filename: str, cwd: str) -> phasePackResult:
                 fromPath = cwd / filename
                 shutil.copy(str(fromPath), str(tgtPath))
                 moved = True
-            if moved: os.remove(str(fromPath)) #DONT del unmoved files
+            if moved and delete_mode: os.remove(str(fromPath)) #DONT del unmoved files
         if fileWarningLevel > 0:
             result.warnings[filename] = fileWarningLevel
         #elif fileWarningLevel == 3:
@@ -175,23 +175,26 @@ def moveFileToPhaseStructure(filename: str, cwd: str) -> phasePackResult:
         result.folders = [pathlib.Path(fp).parts[0] for fp in filepaths] #all phase_x folders
         return result
 
-def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", strictMode: bool = True):
+def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", 
+    strictMode: bool = True, delete_file_mode: bool = False, delete_folder_mode: bool = False):
     """
     Moves all loose files in a directory cwd to their expected phase paths, 
     creating them where neccesary. If output_dir is passed, moves the resulting file to that directory.
     strictMode moves only altered phase folders. outputName sets the output .mf filename (defaults to in-place).
+    delete_file_mode deletes loose copies of files when done.
+    delete_folder_mode deletes phase_x folders when done.
     """
     #TODO: recursive mode
     changedDirs = set()
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
-            result = moveFileToPhaseStructure(item.name, cwd)
+            result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
             changedDirs.update(result.folders)
             #maxWarningLevel = max(result.warnings.values())
             for file, level in result.warnings.items():
                 print(f"Level {level} warning: {file}")
-    if strictMode:  repackList(cwd=cwd, file_list=changedDirs, output_dir=output_dir, output_name=output_name)
-    else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name)   
+    if strictMode:  repackList(cwd=cwd, file_list=changedDirs, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
+    else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     return result
 
 if __name__ == "__main__":
