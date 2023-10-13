@@ -23,7 +23,7 @@ class ShtickerpackMainWindow(QMainWindow):
 
         self.setWindowTitle("shtickerpack alpha")
         self.setWindowIcon(QIcon("shtickerpack.png"))
-        self.resize(1000, 400)
+        self.resize(1000, 550)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
@@ -34,7 +34,7 @@ class ShtickerpackMainWindow(QMainWindow):
 
         self.infoPanel = ShtickerpackProjectSetupTray()
         self.infoGroup = ShtickerpackTitledPanel(self.infoPanel, "Repacking instructions")
-        self.infoGroup.setFixedHeight(80)
+        self.infoGroup.setFixedHeight(120)
         self.layout.addWidget(self.infoGroup)
 
         self.inputFilePanel = ShtickerpackRepackTray()
@@ -56,11 +56,13 @@ class ShtickerpackProjectSetupTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.helpLabel = QLabel(("Place all files you've changed in the same folder (ex. <b><code>/myContentPack/</code></b>). " +
-                                "Then, select that folder in the Repack Assets tray below. <br>" +
+        self.helpLabel = QLabel(("Use the Unpack panel above to extract the asset files from Clash's phase files. " +
+                                "Copy each file you'd like to change into a new folder (ex. <b><code>desktop/myContentPack/</code></b>). <br>"
+                                "When you're happy with your changes, select that folder in the Repack Assets tray below. <br>" +
                                 "shtickerpack will automatically place each file where it needs to go, " +
-                                "pack your changes into a .mf file, and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b> for use."))
-
+                                "pack your changes into a .mf file, and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b>. <br>" +
+                                "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
+                                "Simply remove any .mf file from this folder to disable it."))
         self.addWidget(self.helpLabel, 0, 0)
 
 class ShtickerpackRepackTray(QGridLayout):
@@ -68,7 +70,78 @@ class ShtickerpackRepackTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
+        self.DEFAULT_LOOSE_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject"
         self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
+
+        self.inputDirHint = QLabel("Custom asset folder:")
+        self.inputDirHint.setFixedWidth(150)
+        self.inputDirPath = QLineEdit()
+        self.inputBrowseButton = QPushButton("Select custom asset folder...")
+        self.inputBrowseButton.clicked.connect(self.openInputFileDialog)
+        self.defaultInputButton = QPushButton("Use default input folder")
+        self.defaultInputButton.clicked.connect(self.setDefaultInputDir)
+        self.defaultInputButton.setDisabled(True)
+
+        self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
+        self.delFilesModeBox = QCheckBox("Delete asset files when done")
+        self.moveOutputModeBox = QCheckBox("Move output to Clash resources when done") #todo: warning when deselected
+        self.moveOutputModeBox.setChecked(True)
+
+        # self.outputDirHint = QLabel("Place output folders in:")
+        # self.outputDirHint.setFixedWidth(150)
+        # self.outputDirPath = QLineEdit()
+        # self.outputBrowseButton = QPushButton("Select output folder...")
+        # self.outputBrowseButton.clicked.connect(self.openOutputFileDialog)
+        # self.defaultOutputButton = QPushButton("Use vanilla output folder")
+        # self.defaultOutputButton.clicked.connect(self.setDefaultOutputDir)
+
+        
+        self.repackButton = QPushButton("Go!")
+        #self.repackButton.clicked.connect(lambda:self.unpackTargetDir(self.repackButton))
+
+        self.addWidget(self.inputDirHint, 0, 0)
+        self.addWidget(self.inputDirPath, 0, 1, 1, 4)
+        self.addWidget(self.inputBrowseButton, 1, 2, 1, 2)
+
+        self.addWidget(self.delFolderModeBox, 1, 0, 1, 2)
+        self.addWidget(self.delFilesModeBox, 2, 0, 1, 2)
+        self.addWidget(self.moveOutputModeBox, 2, 2, 1, 2)
+    
+        self.addWidget(self.repackButton, 0, 5, 3, 1)
+        self.repackButton.setMaximumHeight(999)
+    
+
+
+    def openInputFileDialog(self):
+        dir = QFileDialog.getExistingDirectory(
+            None,
+            caption = "Select input phase file folder...",
+            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
+        )
+        if dir:
+            path = pathlib.Path(dir)
+            self.inputDirPath.setText(str(path))
+            print(f"Selected {path} in tray {self.identifier}")
+
+    # def openOutputFileDialog(self):
+    #     dir = QFileDialog.getExistingDirectory(
+    #         None,
+    #         caption = "Select output phase file folder...",
+    #         directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
+    #     )
+    #     if dir:
+    #         path = pathlib.Path(dir)
+    #         self.outputDirPath.setText(str(path))
+    #         print(f"Selected {path} in tray {self.identifier}")
+
+    def setDefaultInputDir(self):
+        self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
+
+    # def setDefaultOutputDir(self):
+    #     self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
+                
+
+
 
 class ShtickerpackUnpackTray(QGridLayout):
     def __init__(self, identifier: str = "UnpackTray"):
