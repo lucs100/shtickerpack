@@ -4,9 +4,9 @@ shtickerpack is a tool that makes working with Corporate Clash phase files easy.
 
 I'm not affiliated with Disney or the Corporate Clash team in any way (although I do wish I were!). shtickerpack doesn't interact with the Corporate Clash launcher, client, or server in any way - it simply automates commands that would otherwise be done in the terminal or manually in the filesystem. I don't have any access to your data, nor to what you're doing with shtickerbook. Be responsible.
 
-![backup_warning](https://github.com/lucs100/shtickerpack/blob/main/backup_warning.png "BACK UP YOUR CONTENT PACKS BEFORE USING SHTICKERPACK. I can't promise it'll work perfectly.")
+![backup_warning](https://github.com/lucs100/shtickerpack/blob/main/gh_assets/backup_warning.png?raw=true "BACK UP YOUR CONTENT PACKS BEFORE USING SHTICKERPACK. I can't promise it'll work perfectly.")
 
-![issues_reminder](https://github.com/lucs100/shtickerpack/blob/main/issues_reminder.png "But do let me know on the Issues tab if you find any problems.")
+![issues_reminder](https://github.com/lucs100/shtickerpack/blob/main/gh_assets/issues_reminder.png?raw=true "But do let me know on the Issues tab if you find any problems.")
 
 If you used shtickerpack to create a content pack or just explore the phase files, I'd love to know :) While you aren't required to cite shtickerpack, I'll really appreciate if you give the project a shoutout if you found it useful.
 

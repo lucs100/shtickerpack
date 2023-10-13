@@ -153,5 +153,3 @@ cython_debug/
 /test
 /phase**
 LUT/temp_lut.json
-/backup_warning.png
-/issues_reminder.png
