@@ -23,7 +23,7 @@ class ShtickerpackMainWindow(QMainWindow):
 
         self.setWindowTitle("shtickerpack alpha")
         self.setWindowIcon(QIcon("shtickerpack.png"))
-        self.resize(1000, 550)
+        self.resize(1000, 415)
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
@@ -82,11 +82,17 @@ class ShtickerpackRepackTray(QGridLayout):
         self.defaultInputButton.clicked.connect(self.setDefaultInputDir)
         self.defaultInputButton.setDisabled(True)
 
+        self.modNameHint = QLabel("Output file name:")
+        self.modNameHint.setFixedWidth(150)
+        self.modNameField = QLineEdit()
+
+        #add spacer rule
+
         self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
         self.delFolderModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFolderModeBox))
         self.delFilesModeBox = QCheckBox("Delete asset files when done")
         self.delFilesModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFilesModeBox))
-        self.moveOutputModeBox = QCheckBox("Move output to Clash resources when done") #todo: warning when deselected
+        self.moveOutputModeBox = QCheckBox("Move output to Clash resources when done (recommended)") #todo: warning when deselected
         self.moveOutputModeBox.setChecked(True)
 
         # self.outputDirHint = QLabel("Place output folders in:")
@@ -98,18 +104,21 @@ class ShtickerpackRepackTray(QGridLayout):
         # self.defaultOutputButton.clicked.connect(self.setDefaultOutputDir)
 
         
-        self.repackButton = QPushButton("Go!")
+        self.repackButton = QPushButton("Go!") #todo: implement, lol
         #self.repackButton.clicked.connect(lambda:self.unpackTargetDir(self.repackButton))
 
         self.addWidget(self.inputDirHint, 0, 0)
-        self.addWidget(self.inputDirPath, 0, 1, 1, 4)
-        self.addWidget(self.inputBrowseButton, 1, 2, 1, 2)
+        self.addWidget(self.inputDirPath, 0, 1, 1, 2) #merge these elements to line up box w unpack label?
+        self.addWidget(self.inputBrowseButton, 0, 3, 1, 1)
 
-        self.addWidget(self.delFolderModeBox, 1, 0, 1, 2)
-        self.addWidget(self.delFilesModeBox, 2, 0, 1, 2)
+        self.addWidget(self.modNameHint, 1, 0)
+        self.addWidget(self.modNameField, 1, 1, 1, 2) #merge these elements to line up box w unpack label?
+
+        self.addWidget(self.delFilesModeBox, 2, 0, 1, 1)
+        self.addWidget(self.delFolderModeBox, 2, 1, 1, 1)
         self.addWidget(self.moveOutputModeBox, 2, 2, 1, 2)
     
-        self.addWidget(self.repackButton, 0, 5, 3, 1)
+        self.addWidget(self.repackButton, 0, 4, 3, 1)
         self.repackButton.setMaximumHeight(999)
     
 
@@ -125,22 +134,8 @@ class ShtickerpackRepackTray(QGridLayout):
             self.inputDirPath.setText(str(path))
             print(f"Selected {path} in tray {self.identifier}")
 
-    # def openOutputFileDialog(self):
-    #     dir = QFileDialog.getExistingDirectory(
-    #         None,
-    #         caption = "Select output phase file folder...",
-    #         directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
-    #     )
-    #     if dir:
-    #         path = pathlib.Path(dir)
-    #         self.outputDirPath.setText(str(path))
-    #         print(f"Selected {path} in tray {self.identifier}")
-
     def setDefaultInputDir(self):
         self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
-
-    # def setDefaultOutputDir(self):
-    #     self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
 
     def deleteModeWarning(self, button: QCheckBox):
         msgData = { #folder, file
@@ -260,9 +255,6 @@ class ShtickerpackUnpackTray(QGridLayout):
         else:
             msg = QMessageBox.critical(None, "de-multify error", 
                 "The output folder doesn't exist or already has phase folders inside!")
-
-
-
 
 
 #QApplication object is the app, sys.argv are the cmd line args
