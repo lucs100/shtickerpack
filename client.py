@@ -70,7 +70,7 @@ class ShtickerpackRepackTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_LOOSE_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject"
+        self.DEFAULT_LOOSE_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject" #TODO: really??
         self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
 
         self.inputDirHint = QLabel("Custom asset folder:")
@@ -84,9 +84,11 @@ class ShtickerpackRepackTray(QGridLayout):
 
         self.modNameHint = QLabel("Output file name:")
         self.modNameHint.setFixedWidth(150)
-        self.modNameField = QLineEdit()
+        self.modNameEntry = QLineEdit()
+        self.autoNameModButton = QPushButton("Choose a name for me")
+        self.autoNameModButton.clicked.connect(lambda:self.modNameEntry.setText(self.generateRandomModName()))
 
-        #add spacer rule
+        self.optionsSpacer = QHorizontalSpacer()
 
         self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
         self.delFolderModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFolderModeBox))
@@ -94,15 +96,6 @@ class ShtickerpackRepackTray(QGridLayout):
         self.delFilesModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFilesModeBox))
         self.moveOutputModeBox = QCheckBox("Move output to Clash resources when done (recommended)") #todo: warning when deselected
         self.moveOutputModeBox.setChecked(True)
-
-        # self.outputDirHint = QLabel("Place output folders in:")
-        # self.outputDirHint.setFixedWidth(150)
-        # self.outputDirPath = QLineEdit()
-        # self.outputBrowseButton = QPushButton("Select output folder...")
-        # self.outputBrowseButton.clicked.connect(self.openOutputFileDialog)
-        # self.defaultOutputButton = QPushButton("Use vanilla output folder")
-        # self.defaultOutputButton.clicked.connect(self.setDefaultOutputDir)
-
         
         self.repackButton = QPushButton("Go!") #todo: implement, lol
         #self.repackButton.clicked.connect(lambda:self.unpackTargetDir(self.repackButton))
@@ -112,16 +105,23 @@ class ShtickerpackRepackTray(QGridLayout):
         self.addWidget(self.inputBrowseButton, 0, 3, 1, 1)
 
         self.addWidget(self.modNameHint, 1, 0)
-        self.addWidget(self.modNameField, 1, 1, 1, 2) #merge these elements to line up box w unpack label?
+        self.addWidget(self.modNameEntry, 1, 1, 1, 2) #merge these elements to line up box w unpack label?
+        self.addWidget(self.autoNameModButton, 1, 3, 1, 1)
 
-        self.addWidget(self.delFilesModeBox, 2, 0, 1, 1)
-        self.addWidget(self.delFolderModeBox, 2, 1, 1, 1)
-        self.addWidget(self.moveOutputModeBox, 2, 2, 1, 2)
+        self.addWidget(self.optionsSpacer, 2, 0, 1, 4)
+
+        self.addWidget(self.delFilesModeBox, 3, 0, 1, 1)
+        self.addWidget(self.delFolderModeBox, 3, 1, 1, 1)
+        self.addWidget(self.moveOutputModeBox, 3, 2, 1, 2)
     
-        self.addWidget(self.repackButton, 0, 4, 3, 1)
+        self.addWidget(self.repackButton, 0, 4, 4, 1)
         self.repackButton.setMaximumHeight(999)
     
-
+    def generateRandomModName(self):
+        dirToCheck = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
+        #TODO: should have logic to generate myMod(X) to avoid duplicates, but placehodler for now
+        return "PlaceholderModName"
+        
 
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
@@ -135,7 +135,7 @@ class ShtickerpackRepackTray(QGridLayout):
             print(f"Selected {path} in tray {self.identifier}")
 
     def setDefaultInputDir(self):
-        self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
+        self.inputDirPath.setText(self.DEFAULT_LOOSE_DIR)
 
     def deleteModeWarning(self, button: QCheckBox):
         msgData = { #folder, file
@@ -255,6 +255,13 @@ class ShtickerpackUnpackTray(QGridLayout):
         else:
             msg = QMessageBox.critical(None, "de-multify error", 
                 "The output folder doesn't exist or already has phase folders inside!")
+
+
+class QHorizontalSpacer(QFrame):
+    def __init__(self):
+        super(QHorizontalSpacer, self).__init__()
+        self.setFrameShape(QFrame.Shape.HLine)
+        self.setFrameShadow(QFrame.Shadow.Sunken)
 
 
 #QApplication object is the app, sys.argv are the cmd line args
