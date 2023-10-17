@@ -85,7 +85,7 @@ class ShtickerpackRepackTray(QGridLayout):
         self.modNameHint = QLabel("Output file name:")
         self.modNameHint.setFixedWidth(150)
         self.modNameEntry = QLineEdit()
-        self.autoNameModButton = QPushButton("Choose a name for me")
+        self.autoNameModButton = QPushButton("Auto-set (Not recommended)")
         self.autoNameModButton.clicked.connect(lambda:self.modNameEntry.setText(self.generateRandomModName()))
 
         self.optionsSpacer = QHorizontalSpacer()
@@ -118,10 +118,13 @@ class ShtickerpackRepackTray(QGridLayout):
         self.repackButton.setMaximumHeight(999)
     
     def generateRandomModName(self):
-        dirToCheck = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
-        #TODO: should have logic to generate myMod(X) to avoid duplicates, but placehodler for now
-        return "PlaceholderModName"
-        
+        output = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
+        placeholderName = "myShtickerpackMod"
+        if not pathlib.Path(f"{output} / {placeholderName}.mf").exists(): return placeholderName
+        i = 1 #ugly
+        while True:
+            if not pathlib.Path(f"{output} / {(placeholderName+str(i))}.mf").exists(): 
+                return (placeholderName+str(i))        
 
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
