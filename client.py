@@ -15,6 +15,22 @@ import ctypes
 myappid = 'shtickerpack' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
+UNPACK_HELP_STR = ("Clash stores its resource files as <i>phase files</i>, in <b><code>.mf</b></code> files (known as multifiles). " +
+                   "They're stored in the <b><code>/Corporate Clash/resources/default/</b></code> folder. <br>" +
+                   "Unless you installed Clash in a custom location, click <i>Use default folders</i> " +
+                   "to automatically locate these folders and unpack the base game's assets. <br>" +
+                   "By default, shtickerpack will unpack these files into <b><code>/Corporate Clash/resources/vanilla/</b></code>, " +
+                   "but you can choose any output folder if you'd like. <br>"+
+                   "<b>Advanced</b>: You can unpack any .mf file using shtickerpack, but keep in mind it will unpack ALL .mf files in the folder you select.")
+
+REPACK_HELP_STR = ("Use the Unpack panel above to extract the asset files from Clash's phase files. " +
+                   "Copy each file you'd like to change into a new folder (ex. <b><code>desktop/myContentPack/</code></b>). <br>"
+                   "When you're happy with your changes, select that folder in the Repack Assets tray below. <br>" +
+                   "shtickerpack will automatically place each file where it needs to go, " +
+                   "pack your changes into a .mf file, and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b>. <br>" +
+                   "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
+                   "Simply remove any .mf file from this folder to disable it.")
+
 #create a custom subclassed window
 class ShtickerpackMainWindow(QMainWindow):
     def __init__(self):
@@ -23,19 +39,26 @@ class ShtickerpackMainWindow(QMainWindow):
 
         self.setWindowTitle("shtickerpack alpha")
         self.setWindowIcon(QIcon("shtickerpack.png"))
-        self.resize(1000, 415)
+        self.resize(1000, 1) #minimal height
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
+
+        #impl tab switcher?
+
+        self.unpackInfoPanel = ShtickerpackInfoTray(UNPACK_HELP_STR)
+        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "Unpacking instructions")
+        self.unpackInfoGroup.setFixedHeight(100)
+        self.layout.addWidget(self.unpackInfoGroup)
 
         self.unpackPanel = ShtickerpackUnpackTray()
         self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
         self.layout.addWidget(self.unpackGroup)
 
-        self.infoPanel = ShtickerpackProjectSetupTray()
-        self.infoGroup = ShtickerpackTitledPanel(self.infoPanel, "Repacking instructions")
-        self.infoGroup.setFixedHeight(120)
-        self.layout.addWidget(self.infoGroup)
+        self.unpackInfoPanel = ShtickerpackInfoTray(REPACK_HELP_STR)
+        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "Repacking instructions")
+        self.unpackInfoGroup.setFixedHeight(100)
+        self.layout.addWidget(self.unpackInfoGroup)
 
         self.inputFilePanel = ShtickerpackRepackTray()
         self.inputGroup = ShtickerpackTitledPanel(self.inputFilePanel, "Repack assets into .mf files")
@@ -51,18 +74,12 @@ class ShtickerpackTitledPanel(QGroupBox):
         super().__init__(title) #sets title to identifier
         self.setLayout(layout)
 
-class ShtickerpackProjectSetupTray(QGridLayout):
-    def __init__(self, identifier: str = "ProjectSetupTray"):
+class ShtickerpackInfoTray(QGridLayout):
+    def __init__(self, helpLabel: str, identifier: str = "InfoTray"):
         super().__init__()
 
         self.identifier = identifier
-        self.helpLabel = QLabel(("Use the Unpack panel above to extract the asset files from Clash's phase files. " +
-                                "Copy each file you'd like to change into a new folder (ex. <b><code>desktop/myContentPack/</code></b>). <br>"
-                                "When you're happy with your changes, select that folder in the Repack Assets tray below. <br>" +
-                                "shtickerpack will automatically place each file where it needs to go, " +
-                                "pack your changes into a .mf file, and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b>. <br>" +
-                                "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
-                                "Simply remove any .mf file from this folder to disable it."))
+        self.helpLabel = QLabel(helpLabel)
         self.addWidget(self.helpLabel, 0, 0)
 
 class ShtickerpackRepackTray(QGridLayout):
