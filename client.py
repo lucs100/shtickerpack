@@ -21,13 +21,13 @@ UNPACK_HELP_STR = ("Clash stores its resource files as <i>phase files</i>, in <b
                    "to automatically locate these folders and unpack the base game's assets. <br>" +
                    "By default, shtickerpack will unpack these files into <b><code>/Corporate Clash/resources/vanilla/</b></code>, " +
                    "but you can choose any output folder if you'd like. <br>"+
-                   "<b>Advanced</b>: You can unpack any .mf file using shtickerpack, but keep in mind it will unpack ALL .mf files in the folder you select.")
+                   "<b>Advanced</b>: You can unpack any .mf file using shtickerpack, but keep in mind this will unpack ALL .mf files in the folder you select.")
 
-REPACK_HELP_STR = ("Use the Unpack panel above to extract the asset files from Clash's phase files. " +
+REPACK_HELP_STR = ("Once you've unpack the phase files, you can change files and repack them into a mod. " +
                    "Copy each file you'd like to change into a new folder (ex. <b><code>desktop/myContentPack/</code></b>). <br>"
                    "When you're happy with your changes, select that folder in the Repack Assets tray below. <br>" +
-                   "shtickerpack will automatically place each file where it needs to go, " +
-                   "pack your changes into a .mf file, and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b>. <br>" +
+                   "shtickerpack will automatically pack your changes into a mod as an a .mf file, " +
+                   "and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b>. <br>" +
                    "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
                    "Simply remove any .mf file from this folder to disable it.")
 
@@ -46,24 +46,44 @@ class ShtickerpackMainWindow(QMainWindow):
 
         #impl tab switcher?
 
+        self.tabs = QTabWidget()
+        self.tabs.resize(1000, 500)
+
+        self.tab1 = QWidget()
+        self.tab2 = QWidget()
+
         self.unpackInfoPanel = ShtickerpackInfoTray(UNPACK_HELP_STR)
-        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "Unpacking instructions")
-        self.unpackInfoGroup.setFixedHeight(100)
-        self.layout.addWidget(self.unpackInfoGroup)
+        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "How to Unpack")
+        self.unpackInfoGroup.setFixedHeight(110)
+        # self.layout.addWidget(self.unpackInfoGroup)
 
         self.unpackPanel = ShtickerpackUnpackTray()
         self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
-        self.layout.addWidget(self.unpackGroup)
+        # self.layout.addWidget(self.unpackGroup)
 
-        self.unpackInfoPanel = ShtickerpackInfoTray(REPACK_HELP_STR)
-        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "Repacking instructions")
-        self.unpackInfoGroup.setFixedHeight(100)
-        self.layout.addWidget(self.unpackInfoGroup)
+        self.tab1.layout = QVBoxLayout()
+        self.tab1.layout.addWidget(self.unpackInfoGroup)
+        self.tab1.layout.addWidget(self.unpackGroup)
+        self.tab1.setLayout(self.tab1.layout)
 
-        self.inputFilePanel = ShtickerpackRepackTray()
-        self.inputGroup = ShtickerpackTitledPanel(self.inputFilePanel, "Repack assets into .mf files")
-        self.layout.addWidget(self.inputGroup)
+        self.repackInfoPanel = ShtickerpackInfoTray(REPACK_HELP_STR)
+        self.repackInfoGroup = ShtickerpackTitledPanel(self.repackInfoPanel, "How to Repack")
+        self.repackInfoGroup.setFixedHeight(110)
+        # self.layout.addWidget(self.repackInfoGroup)
 
+        self.repackFilePanel = ShtickerpackRepackTray()
+        self.repackGroup = ShtickerpackTitledPanel(self.repackFilePanel, "Repack assets into .mf files")
+        # self.layout.addWidget(self.repackGroup)
+
+        self.tab2.layout = QVBoxLayout()
+        self.tab2.layout.addWidget(self.repackInfoGroup)
+        self.tab2.layout.addWidget(self.repackGroup)
+        self.tab2.setLayout(self.tab2.layout)
+
+        self.tabs.addTab(self.tab1, "Unpack")
+        self.tabs.addTab(self.tab2, "Repack")
+
+        self.layout.addWidget(self.tabs)
         self.mainContainer.setLayout(self.layout)
         self.setCentralWidget(self.mainContainer)
         self.show()
@@ -133,6 +153,7 @@ class ShtickerpackRepackTray(QGridLayout):
     
         self.addWidget(self.repackButton, 0, 4, 4, 1)
         self.repackButton.setMaximumHeight(999)
+        #TODO: resize to match unpack go button size
     
     def generateRandomModName(self):
         output = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
@@ -165,11 +186,11 @@ class ShtickerpackRepackTray(QGridLayout):
             },
             True: {
                 False: (QMessageBox.warning, "This will delete generated folders once complete. Your asset files won't be deleted. Is this OK?"),
-                True: (QMessageBox.critical, "This will delete loose asset files AND generated folders once complete. They'll still be available in the generated multifile, but you'll have to unpack it manually <b>(which can be annoying)</b>. Is this OK?")
+                True: (QMessageBox.critical, "This will delete loose asset files AND generated folders once complete. They'll still be available in the generated multifile, but you'll have to unpack it or with shtickerpack <b>(which can be annoying)</b>. Is this OK?")
             }
         }
         messageType, messageStr = msgData[self.delFolderModeBox.isChecked()][self.delFilesModeBox.isChecked()] #this is the best thing i have ever written
-        if button.checkState():
+        if button.isChecked() and messageType is not None:
             result = messageType(None, "Note!", messageStr, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
             if result == QMessageBox.StandardButton.No:
                 button.setChecked(False)
