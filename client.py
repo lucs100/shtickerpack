@@ -39,7 +39,7 @@ class ShtickerpackMainWindow(QMainWindow):
 
         self.setWindowTitle("shtickerpack alpha")
         self.setWindowIcon(QIcon("shtickerpack.png"))
-        self.resize(1000, 1) #minimal height
+        self.setFixedSize(1000, 375) #minimal height
 
         self.mainContainer = QWidget()
         self.layout = QVBoxLayout()
@@ -55,39 +55,29 @@ class ShtickerpackMainWindow(QMainWindow):
         self.unpackInfoPanel = ShtickerpackInfoTray(UNPACK_HELP_STR)
         self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "How to Unpack")
         self.unpackInfoGroup.setFixedHeight(110)
-        # self.layout.addWidget(self.unpackInfoGroup)
-
         self.unpackPanel = ShtickerpackUnpackTray()
         self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
-        # self.layout.addWidget(self.unpackGroup)
-
         self.tab1.layout = QVBoxLayout()
         self.tab1.layout.addWidget(self.unpackInfoGroup)
         self.tab1.layout.addWidget(self.unpackGroup)
         self.tab1.setLayout(self.tab1.layout)
+        self.tabs.addTab(self.tab1, "Unpack")
 
         self.repackInfoPanel = ShtickerpackInfoTray(REPACK_HELP_STR)
         self.repackInfoGroup = ShtickerpackTitledPanel(self.repackInfoPanel, "How to Repack")
         self.repackInfoGroup.setFixedHeight(110)
-        # self.layout.addWidget(self.repackInfoGroup)
-
         self.repackFilePanel = ShtickerpackRepackTray()
         self.repackGroup = ShtickerpackTitledPanel(self.repackFilePanel, "Repack assets into .mf files")
-        # self.layout.addWidget(self.repackGroup)
-
         self.tab2.layout = QVBoxLayout()
         self.tab2.layout.addWidget(self.repackInfoGroup)
         self.tab2.layout.addWidget(self.repackGroup)
         self.tab2.setLayout(self.tab2.layout)
-
-        self.tabs.addTab(self.tab1, "Unpack")
         self.tabs.addTab(self.tab2, "Repack")
 
         self.layout.addWidget(self.tabs)
         self.mainContainer.setLayout(self.layout)
         self.setCentralWidget(self.mainContainer)
         self.show()
-
 
 class ShtickerpackTitledPanel(QGroupBox):
     def __init__(self, layout: QGridLayout, title: str):
@@ -101,102 +91,6 @@ class ShtickerpackInfoTray(QGridLayout):
         self.identifier = identifier
         self.helpLabel = QLabel(helpLabel)
         self.addWidget(self.helpLabel, 0, 0)
-
-class ShtickerpackRepackTray(QGridLayout):
-    def __init__(self, identifier: str = "RepackTray"):
-        super().__init__()
-
-        self.identifier = identifier
-        self.DEFAULT_LOOSE_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject" #TODO: really??
-        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
-
-        self.inputDirHint = QLabel("Custom asset folder:")
-        self.inputDirHint.setFixedWidth(150)
-        self.inputDirPath = QLineEdit()
-        self.inputBrowseButton = QPushButton("Select custom asset folder...")
-        self.inputBrowseButton.clicked.connect(self.openInputFileDialog)
-        self.defaultInputButton = QPushButton("Use default input folder")
-        self.defaultInputButton.clicked.connect(self.setDefaultInputDir)
-        self.defaultInputButton.setDisabled(True)
-
-        self.modNameHint = QLabel("Output file name:")
-        self.modNameHint.setFixedWidth(150)
-        self.modNameEntry = QLineEdit()
-        self.autoNameModButton = QPushButton("Auto-set (Not recommended)")
-        self.autoNameModButton.clicked.connect(lambda:self.modNameEntry.setText(self.generateRandomModName()))
-
-        self.optionsSpacer = QHorizontalSpacer()
-
-        self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
-        self.delFolderModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFolderModeBox))
-        self.delFilesModeBox = QCheckBox("Delete asset files when done")
-        self.delFilesModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFilesModeBox))
-        self.moveOutputModeBox = QCheckBox("Move output to Clash resources when done (recommended)") #todo: warning when deselected
-        self.moveOutputModeBox.setChecked(True)
-        
-        self.repackButton = QPushButton("Go!") #todo: implement, lol
-        #self.repackButton.clicked.connect(lambda:self.unpackTargetDir(self.repackButton))
-
-        self.addWidget(self.inputDirHint, 0, 0)
-        self.addWidget(self.inputDirPath, 0, 1, 1, 2) #merge these elements to line up box w unpack label?
-        self.addWidget(self.inputBrowseButton, 0, 3, 1, 1)
-
-        self.addWidget(self.modNameHint, 1, 0)
-        self.addWidget(self.modNameEntry, 1, 1, 1, 2) #merge these elements to line up box w unpack label?
-        self.addWidget(self.autoNameModButton, 1, 3, 1, 1)
-
-        self.addWidget(self.optionsSpacer, 2, 0, 1, 4)
-
-        self.addWidget(self.delFilesModeBox, 3, 0, 1, 1)
-        self.addWidget(self.delFolderModeBox, 3, 1, 1, 1)
-        self.addWidget(self.moveOutputModeBox, 3, 2, 1, 2)
-    
-        self.addWidget(self.repackButton, 0, 4, 4, 1)
-        self.repackButton.setMaximumHeight(999)
-        #TODO: resize to match unpack go button size
-    
-    def generateRandomModName(self):
-        output = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
-        placeholderName = "myShtickerpackMod"
-        if not pathlib.Path(f"{output} / {placeholderName}.mf").exists(): return placeholderName
-        i = 1 #ugly
-        while True:
-            if not pathlib.Path(f"{output} / {(placeholderName+str(i))}.mf").exists(): 
-                return (placeholderName+str(i))        
-
-    def openInputFileDialog(self):
-        dir = QFileDialog.getExistingDirectory(
-            None,
-            caption = "Select input phase file folder...",
-            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
-        )
-        if dir:
-            path = pathlib.Path(dir)
-            self.inputDirPath.setText(str(path))
-            print(f"Selected {path} in tray {self.identifier}")
-
-    def setDefaultInputDir(self):
-        self.inputDirPath.setText(self.DEFAULT_LOOSE_DIR)
-
-    def deleteModeWarning(self, button: QCheckBox):
-        msgData = { #folder, file
-            False: {
-                False: (None, None),
-                True: (QMessageBox.warning, "This will delete your loose asset files once complete. They'll still be available in the generated phase folders and multifile. Is this OK?")
-            },
-            True: {
-                False: (QMessageBox.warning, "This will delete generated folders once complete. Your asset files won't be deleted. Is this OK?"),
-                True: (QMessageBox.critical, "This will delete loose asset files AND generated folders once complete. They'll still be available in the generated multifile, but you'll have to unpack it or with shtickerpack <b>(which can be annoying)</b>. Is this OK?")
-            }
-        }
-        messageType, messageStr = msgData[self.delFolderModeBox.isChecked()][self.delFilesModeBox.isChecked()] #this is the best thing i have ever written
-        if button.isChecked() and messageType is not None:
-            result = messageType(None, "Note!", messageStr, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-            if result == QMessageBox.StandardButton.No:
-                button.setChecked(False)
-                
-
-
 
 class ShtickerpackUnpackTray(QGridLayout):
     def __init__(self, identifier: str = "UnpackTray"):
@@ -227,7 +121,9 @@ class ShtickerpackUnpackTray(QGridLayout):
         self.defaultHybridButton.clicked.connect(self.setDefaultOutputDir)
         
         self.unpackButton = QPushButton("Go!")
+        self.unpackButton.setFixedSize(189, 121)
         self.unpackButton.clicked.connect(lambda:self.unpackTargetDir(self.unpackButton))
+        print(f"Unpack - H: {self.unpackButton.height()}, W: {self.unpackButton.width()}")
 
         self.addWidget(self.inputDirHint, 0, 0)
         self.addWidget(self.outputDirHint, 1, 0)
@@ -243,6 +139,8 @@ class ShtickerpackUnpackTray(QGridLayout):
 
         self.addWidget(self.unpackButton, 0, 4, 4, 1)
         self.unpackButton.setMaximumHeight(999)
+
+        self.setContentsMargins(8, 16, 8, 16)
     
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
@@ -297,6 +195,110 @@ class ShtickerpackUnpackTray(QGridLayout):
             msg = QMessageBox.critical(None, "de-multify error", 
                 "The output folder doesn't exist or already has phase folders inside!")
 
+class ShtickerpackRepackTray(QGridLayout):
+    def __init__(self, identifier: str = "RepackTray"):
+        super().__init__()
+
+        self.identifier = identifier
+        self.DEFAULT_LOOSE_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject" #TODO: really??
+        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
+
+        self.inputDirHint = QLabel("Custom asset folder:")
+        self.inputDirHint.setFixedWidth(150)
+        self.inputDirPath = QLineEdit()
+        self.inputBrowseButton = QPushButton("Select custom asset folder...")
+        self.inputBrowseButton.clicked.connect(self.openInputFileDialog)
+        self.defaultInputButton = QPushButton("Use default input folder")
+        self.defaultInputButton.clicked.connect(self.setDefaultInputDir)
+        self.defaultInputButton.setDisabled(True)
+
+        self.modNameHint = QLabel("Output file name:")
+        self.modNameHint.setFixedWidth(150)
+        self.modNameEntry = QLineEdit()
+        self.autoNameModButton = QPushButton("Auto-set (Not recommended)")
+        self.autoNameModButton.clicked.connect(lambda:self.modNameEntry.setText(self.generateRandomModName()))
+
+        self.optionsSpacer = QHorizontalSpacer()
+        self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
+        self.delFolderModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFolderModeBox))
+        self.delFilesModeBox = QCheckBox("Delete asset files when done")
+        self.delFilesModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFilesModeBox))
+        self.moveOutputModeBox = QCheckBox("Move output to Clash resources (recommended)") #todo: warning when deselected
+        self.moveOutputModeBox.setChecked(True)
+
+        self.optionsTray = QWidget()
+        self.optionsTray.layout = QGridLayout()
+        self.optionsTray.layout.addWidget(self.optionsSpacer, 0, 0, 1, 3)
+        self.optionsTray.layout.addWidget(self.delFolderModeBox, 1, 0)
+        self.optionsTray.layout.addWidget(self.delFilesModeBox, 1, 1)
+        self.optionsTray.layout.addWidget(self.moveOutputModeBox, 1, 2)
+        self.optionsTray.setLayout(self.optionsTray.layout)
+        self.optionsTray.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        
+        self.repackButton = QPushButton("Go!") #todo: implement, lol
+        self.repackButton.setFixedSize(189, 121)
+        print(f"Repack - H: {self.repackButton.height()}, W: {self.repackButton.width()}")
+        #self.repackButton.clicked.connect(lambda:self.unpackTargetDir(self.repackButton))
+
+        self.addWidget(self.inputDirHint, 0, 0)
+        self.addWidget(self.inputDirPath, 0, 1, 1, 2) #merge these elements to line up box w unpack label?
+        self.addWidget(self.inputBrowseButton, 0, 3, 1, 1)
+
+        self.addWidget(self.modNameHint, 1, 0)
+        self.addWidget(self.modNameEntry, 1, 1, 1, 2) #merge these elements to line up box w unpack label?
+        self.addWidget(self.autoNameModButton, 1, 3, 1, 1)
+
+        # self.addWidget(self.delFilesModeBox, 3, 0, 1, 1)
+        # self.addWidget(self.delFolderModeBox, 3, 1, 1, 1)
+        # self.addWidget(self.moveOutputModeBox, 3, 2, 1, 2)
+        self.addWidget(self.optionsTray, 2, 0, 1, 4)
+
+        self.addWidget(self.repackButton, 0, 4, 3, 1)
+        self.repackButton.setMaximumHeight(999)
+        #TODO: resize to match unpack go button size
+        
+        self.setContentsMargins(8, 16, 8, 16)
+    
+    def generateRandomModName(self):
+        output = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
+        placeholderName = "myShtickerpackMod"
+        if not pathlib.Path(f"{output} / {placeholderName}.mf").exists(): return placeholderName
+        i = 1 #ugly
+        while True:
+            if not pathlib.Path(f"{output} / {(placeholderName+str(i))}.mf").exists(): 
+                return (placeholderName+str(i))        
+
+    def openInputFileDialog(self):
+        dir = QFileDialog.getExistingDirectory(
+            None,
+            caption = "Select input phase file folder...",
+            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
+        )
+        if dir:
+            path = pathlib.Path(dir)
+            self.inputDirPath.setText(str(path))
+            print(f"Selected {path} in tray {self.identifier}")
+
+    def setDefaultInputDir(self):
+        self.inputDirPath.setText(self.DEFAULT_LOOSE_DIR)
+
+    def deleteModeWarning(self, button: QCheckBox):
+        msgData = { #folder, file
+            False: {
+                False: (None, None),
+                True: (QMessageBox.warning, "This will delete your loose asset files once complete. They'll still be available in the generated phase folders and multifile. Is this OK?")
+            },
+            True: {
+                False: (QMessageBox.warning, "This will delete generated folders once complete. Your asset files won't be deleted. Is this OK?"),
+                True: (QMessageBox.critical, "This will delete loose asset files AND generated folders once complete. They'll still be available in the generated multifile, but you'll have to unpack it or with shtickerpack <b>(which can be annoying)</b>. Is this OK?")
+            }
+        }
+        messageType, messageStr = msgData[self.delFolderModeBox.isChecked()][self.delFilesModeBox.isChecked()] #this is the best thing i have ever written
+        if button.isChecked() and messageType is not None:
+            result = messageType(None, "Note!", messageStr, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            if result == QMessageBox.StandardButton.No:
+                button.setChecked(False)
+ 
 
 class QHorizontalSpacer(QFrame):
     def __init__(self):
