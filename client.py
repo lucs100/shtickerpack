@@ -262,11 +262,12 @@ class ShtickerpackRepackTray(QGridLayout):
     def generateRandomModName(self):
         output = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
         placeholderName = "myShtickerpackMod"
-        if not pathlib.Path(f"{output} / {placeholderName}.mf").exists(): return placeholderName
+        if not pathlib.Path(f"{output}/{placeholderName}.mf").exists(): return placeholderName
         i = 1 #ugly
         while True:
-            if not pathlib.Path(f"{output} / {(placeholderName+str(i))}.mf").exists(): 
-                return (placeholderName+str(i))        
+            if not pathlib.Path(f"{output}/{(placeholderName+str(i))}.mf").exists(): 
+                return (placeholderName+str(i))     
+            else: i += 1   
 
     def openInputFileDialog(self):
         dir = QFileDialog.getExistingDirectory(
