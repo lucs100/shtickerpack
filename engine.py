@@ -138,9 +138,29 @@ def loadLUT(fp: str) -> dict:
         return json.loads(file.read())
 
 class phasePackResult:
-    def __init__(self, folders: list = [], warnings: "dict[str: int]" = {}):
+    def __init__(self, folders: list = [], file: str = "", warnings: "dict[str: int]" = {}):
         self.folders: list = folders
+        self.file: str = file
         self.warnings: "dict[str: int]" = warnings
+
+class phasePackOverallResult:
+    def __init__(self, folders: list = [], files: list = [], warnings: "dict[str: int]" = {}):
+        self.folders: list = folders
+        self.files: list = files
+        self.warnings: "dict[str: int]" = warnings
+    
+    def append(self, result: phasePackResult):
+        self.folders.extend(result.folders)
+        self.files.append(result.file)
+        self.warnings.update(result.warnings) #3 different methods lol
+
+    def getFilesAtLevel(self, queryLevel: int) -> "list[str]":
+        output = []
+        for file, level in self.warnings.items():
+            if level == queryLevel:
+                output.append(file)
+        if output == []: return None
+        else: return output
 
 def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False) -> phasePackResult:
     """
@@ -185,17 +205,19 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     delete_folder_mode deletes phase_x folders when done.
     """
     #TODO: recursive mode
-    changedDirs = set()
+    overallResult = phasePackOverallResult()
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
-            changedDirs.update(result.folders)
-            #maxWarningLevel = max(result.warnings.values())
+            overallResult.append(result)
             for file, level in result.warnings.items():
                 print(f"Level {level} warning: {file}")
-    if strictMode:  repackList(cwd=cwd, file_list=changedDirs, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
+    if strictMode:  repackList(cwd=cwd, file_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
-    return result
+    return overallResult
+
+def modExists(outputDir: str, modName: str) -> bool:
+    return pathlib.Path(f"{outputDir}/{modName+str}.mf").exists()
 
 if __name__ == "__main__":
     #used for testing
