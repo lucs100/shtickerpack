@@ -99,24 +99,28 @@ def spaceDelimit(file_list: list, base_dir: str="") -> str:
         else:               targetMoveStr += (f"{base_dir}/{file} ") 
     return targetMoveStr.strip()
 
-def repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_name: str = "defaultPackName", output_dir: str = None):
+def repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False):
     """
     Manually repacks all folders specified in the file_list parameter. Can be str or simple iterable.
     Moves the output file to output_dir if specified (leaves in-place by default).
     """
     if not isinstance(file_list, str): #assume iterable 
-        file_list = spaceDelimit(file_list) #no base_dir, as we're in the right cwd
-    if file_list == "": return # no files passed
+        file_list_str = spaceDelimit(file_list) #no base_dir, as we're in the right cwd
+    if file_list_str == "": return # no files passed
     
     if output_dir != None: prepDir(output_dir)
     
     print(f"Beginning repack! This may take a few seconds...")
     start = time.time()
-    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list}", shell=True, cwd=cwd)
+    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list_str}", shell=True, cwd=cwd)
     end = time.time()
     print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
     if output_dir != None:
         shutil.move(f"{cwd}/{output_name}.mf", output_dir)
+    if delete_mode:
+        for file in file_list:
+            os.remove(f"{cwd}/{file}")
+
 
 def repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "defaultPackName", output_dir: str = None) -> None:
     """
@@ -149,7 +153,8 @@ class phasePackOverallResult:
         self.files: list = files
         self.warnings: "dict[str: int]" = warnings
     
-    def append(self, result: phasePackResult):
+    def addResult(self, result: phasePackResult):
+        if result is None: return #file is not a phase file, should warn somehow... oh well #TODO
         self.folders.extend(result.folders)
         self.files.append(result.file)
         self.warnings.update(result.warnings) #3 different methods lol
@@ -174,6 +179,7 @@ def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False)
 
         filepaths = PHASE_LUT[filename]['fp']
         fileWarningLevel = PHASE_LUT[filename]['warning_level']
+        result.file = filename
 
         if fileWarningLevel in [0, 1, 2]:
             moved = False
@@ -205,11 +211,13 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     delete_folder_mode deletes phase_x folders when done.
     """
     #TODO: recursive mode
+    global PHASE_LUT
+    if PHASE_LUT == {}: PHASE_LUT = loadLUT("./lut/file_lut.json")
     overallResult = phasePackOverallResult()
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
-            overallResult.append(result)
+            overallResult.addResult(result)
             for file, level in result.warnings.items():
                 print(f"Level {level} warning: {file}")
     if strictMode:  repackList(cwd=cwd, file_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
@@ -217,7 +225,9 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     return overallResult
 
 def modExists(outputDir: str, modName: str) -> bool:
-    return pathlib.Path(f"{outputDir}/{modName+str}.mf").exists()
+    return pathlib.Path(f"{outputDir}/{modName}.mf").exists()
+
+
 
 if __name__ == "__main__":
     #used for testing
@@ -225,6 +235,7 @@ if __name__ == "__main__":
     # movePhaseToDirectory()
     # repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output")
     
-    PHASE_LUT = loadLUT("./lut/file_lut.json")
-    targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files"
-    repackAllLooseFiles(cwd=targetDir, output_name="loosePackTest")
+    # PHASE_LUT = loadLUT("./lut/file_lut.json")
+    # targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files"
+    # repackAllLooseFiles(cwd=targetDir, output_name="loosePackTest")
+    pass
