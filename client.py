@@ -37,7 +37,7 @@ class ShtickerpackMainWindow(QMainWindow):
         #call the init method of QMainWindow
         super().__init__()
 
-        self.setWindowTitle("shtickerpack alpha")
+        self.setWindowTitle("shtickerpack beta")
         self.setWindowIcon(QIcon("shtickerpack.png"))
         self.setFixedSize(1000, 375) #minimal height
 
@@ -123,7 +123,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         self.unpackButton = QPushButton("Go!")
         self.unpackButton.setFixedSize(189, 121)
         self.unpackButton.clicked.connect(lambda:self.unpackTargetDir(self.unpackButton))
-        print(f"Unpack - H: {self.unpackButton.height()}, W: {self.unpackButton.width()}")
+        #print(f"Unpack - H: {self.unpackButton.height()}, W: {self.unpackButton.width()}")
 
         self.addWidget(self.inputDirHint, 0, 0)
         self.addWidget(self.outputDirHint, 1, 0)
@@ -219,8 +219,8 @@ class ShtickerpackRepackTray(QGridLayout):
         self.autoNameModButton.clicked.connect(lambda:self.modNameEntry.setText(self.generateRandomModName()))
 
         self.optionsSpacer = QHorizontalSpacer()
-        self.delFolderModeBox = QCheckBox("Delete temporary folders when done")
-        self.delFolderModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFolderModeBox))
+        self.delFoldersModeBox = QCheckBox("Delete temporary folders when done")
+        self.delFoldersModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFoldersModeBox))
         self.delFilesModeBox = QCheckBox("Delete asset files when done")
         self.delFilesModeBox.clicked.connect(lambda:self.deleteModeWarning(self.delFilesModeBox))
         self.moveOutputModeBox = QCheckBox("Move output to Clash resources (recommended)") #todo: warning when deselected
@@ -229,16 +229,16 @@ class ShtickerpackRepackTray(QGridLayout):
         self.optionsTray = QWidget()
         self.optionsTray.layout = QGridLayout()
         self.optionsTray.layout.addWidget(self.optionsSpacer, 0, 0, 1, 3)
-        self.optionsTray.layout.addWidget(self.delFolderModeBox, 1, 0)
+        self.optionsTray.layout.addWidget(self.delFoldersModeBox, 1, 0)
         self.optionsTray.layout.addWidget(self.delFilesModeBox, 1, 1)
         self.optionsTray.layout.addWidget(self.moveOutputModeBox, 1, 2)
         self.optionsTray.setLayout(self.optionsTray.layout)
         self.optionsTray.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         
         self.repackButton = QPushButton("Go!") #todo: implement, lol
+        self.repackButton.clicked.connect(lambda:self.repackTargetDir(self.repackButton))
         self.repackButton.setFixedSize(189, 121)
-        print(f"Repack - H: {self.repackButton.height()}, W: {self.repackButton.width()}")
-        #self.repackButton.clicked.connect(lambda:self.unpackTargetDir(self.repackButton))
+        #print(f"Repack - H: {self.repackButton.height()}, W: {self.repackButton.width()}")
 
         self.addWidget(self.inputDirHint, 0, 0)
         self.addWidget(self.inputDirPath, 0, 1, 1, 2) #merge these elements to line up box w unpack label?
@@ -262,10 +262,10 @@ class ShtickerpackRepackTray(QGridLayout):
     def generateRandomModName(self):
         output = self.DEFAULT_OUTPUT_DIR #.../clash/resources/contentpacks
         placeholderName = "myShtickerpackMod"
-        if not pathlib.Path(f"{output}/{placeholderName}.mf").exists(): return placeholderName
+        if not engine.modExists(output, placeholderName): return placeholderName
         i = 1 #ugly
         while True:
-            if not pathlib.Path(f"{output}/{(placeholderName+str(i))}.mf").exists(): 
+            if not engine.modExists(output, placeholderName+str(i)): 
                 return (placeholderName+str(i))     
             else: i += 1   
 
@@ -294,12 +294,41 @@ class ShtickerpackRepackTray(QGridLayout):
                 True: (QMessageBox.critical, "This will delete loose asset files AND generated folders once complete. They'll still be available in the generated multifile, but you'll have to unpack it or with shtickerpack <b>(which can be annoying)</b>. Is this OK?")
             }
         }
-        messageType, messageStr = msgData[self.delFolderModeBox.isChecked()][self.delFilesModeBox.isChecked()] #this is the best thing i have ever written
+        messageType, messageStr = msgData[self.delFoldersModeBox.isChecked()][self.delFilesModeBox.isChecked()] #this is the best thing i have ever written
         if button.isChecked() and messageType is not None:
             result = messageType(None, "Note!", messageStr, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
             if result == QMessageBox.StandardButton.No:
                 button.setChecked(False)
- 
+    
+    def repackTargetDir(self, button: QPushButton):
+        deleteFiles = self.delFilesModeBox.isChecked()
+        deleteFolders = self.delFoldersModeBox.isChecked()
+        outputDir = None
+        if self.moveOutputModeBox.isChecked():
+            outputDir = self.DEFAULT_OUTPUT_DIR
+        dir = self.inputDirPath.text()
+        modName = self.modNameEntry.text()
+        if modName.endswith(".mf"): modName = modName[:-3]
+        if not modName.isalnum(): #should refactor these checks but w/e...
+            msg = QMessageBox.critical(None, "Invalid mod name!", "Your mod name can only be alphanumeric! Note your mod name shouldn't end with '.mf'.")
+            return False
+        if engine.modExists(self.DEFAULT_OUTPUT_DIR, modName):
+            msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder ({outputDir})!")
+            return False
+        result: engine.phasePackOverallResult = engine.repackAllLooseFiles(cwd=dir, 
+                                                                    output_dir=outputDir, 
+                                                                    output_name=modName, 
+                                                                    delete_file_mode=deleteFiles, 
+                                                                    delete_folder_mode=deleteFolders)
+        #messy, but how do you refactor this?? probably easier to just be explicit
+        if (level3Files := result.getFilesAtLevel(3)) is not None:
+            msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
+        if (level2Files := result.getFilesAtLevel(2)) is not None:
+            msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+        if (level1Files := result.getFilesAtLevel(1)) is not None:
+            msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+        msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
+        return True
 
 class QHorizontalSpacer(QFrame):
     def __init__(self):
