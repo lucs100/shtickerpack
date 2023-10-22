@@ -10,13 +10,14 @@ Test Teardown    Custom Test Teardown
 ${ClashResources}            C:/Users/Lucas/AppData/Local/Corporate Clash/resources/contentpacks
 ${LooseFileWorkspace}        C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files
 ${LooseFilesClean}           C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_good_files
-${LooseFilesDirty}           C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_error_files
+${LooseFilesDuplicate}       C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_dupe_files
+${LooseFilesCleanAndDuplicate}     C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_good_and_dupe_files
 ${True}     True
 ${False}    False
 
 *** Test Cases ***
-Repack Clean Files Without Deletion
-    [Tags]    repack    clean
+Repack T0 Without Deletion
+    [Tags]    repack    t0
     Setup Loose File Directory    ${LooseFilesClean}
     @{OldFiles} =     List Files In Directory     ${LooseFileWorkspace}
     Repack Loose Files     deleteFiles=${False}     deleteFolders=${False}
@@ -24,8 +25,8 @@ Repack Clean Files Without Deletion
     @{NewFiles} =     List Files In Directory     ${LooseFileWorkspace}
     Should Be Equal     ${OldFiles}     ${NewFiles}
 
-Repack Clean Files And Delete Files
-    [Tags]    repack    clean    delete files
+Repack T0 And Delete Files
+    [Tags]    repack    t0    delete files
     Setup Loose File Directory    ${LooseFilesClean}
     @{OldFiles} =     List Files In Directory     ${LooseFileWorkspace}
     Repack Loose Files     deleteFiles=${True}     deleteFolders=${False}
@@ -35,8 +36,8 @@ Repack Clean Files And Delete Files
         Should Not Contain Match     @{NewFiles}     @{OldFiles}
     END
 
-Repack Clean Files And Delete Folders
-    [Tags]    repack    clean    delete folders
+Repack T0 And Delete Folders
+    [Tags]    repack    t0    delete folders
     Setup Loose File Directory    ${LooseFilesClean}
     @{OldFiles} =     List Directories In Directory     ${LooseFileWorkspace}
     Repack Loose Files     deleteFiles=${False}     deleteFolders=${True}
@@ -44,16 +45,93 @@ Repack Clean Files And Delete Folders
     ${DirCount} =     Count Directories In Directory     ${LooseFileWorkspace}
     Should Be Equal As Numbers    ${DirCount}     0
 
-Repack Clean Files And Delete Files And Folders
-    [Tags]    repack    clean    delete files    delete folders
+Repack T0 And Delete Files And Folders
+    [Tags]    repack    t0    delete files    delete folders
     Setup Loose File Directory    ${LooseFilesClean}
-    @{OldFiles} =     List Directories In Directory     ${LooseFileWorkspace}
     Repack Loose Files     deleteFiles=${True}     deleteFolders=${True}
     Verify Packed Output Exists
     ${DirCount} =     Count Directories In Directory     ${LooseFileWorkspace}
     Should Be Equal As Numbers    ${DirCount}     0
     ${FileCount} =     Count Files In Directory     ${LooseFileWorkspace}
     Should Be Equal As Numbers    ${FileCount}     0
+
+Repack T12 Without Deletion
+    [Tags]    repack     t12     
+    Setup Loose File Directory    ${LooseFilesDuplicate}
+    @{OldFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    Repack Loose Files     deleteFiles=${False}     deleteFolders=${False}
+    Verify Packed Output Exists
+    @{NewFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    Should Be Equal     ${OldFiles}     ${NewFiles}
+
+Repack T12 And Delete Files
+    [Tags]    repack    t12    delete files
+    Setup Loose File Directory    ${LooseFilesDuplicate}
+    @{OldFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    Repack Loose Files     deleteFiles=${True}     deleteFolders=${False}
+    Verify Packed Output Exists
+    @{NewFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    FOR    ${File}     IN     @{NewFiles}
+        Should Not Contain Match     @{NewFiles}     @{OldFiles}
+    END
+
+Repack T12 And Delete Folders
+    [Tags]    repack    t12    delete folders
+    Setup Loose File Directory    ${LooseFilesDuplicate}
+    Repack Loose Files     deleteFiles=${False}     deleteFolders=${True}
+    Verify Packed Output Exists
+    ${DirCount} =     Count Directories In Directory     ${LooseFileWorkspace}
+    Should Be Equal As Numbers    ${DirCount}     0
+
+Repack T12 And Delete Files And Folders
+    [Tags]    repack    t12    delete files    delete folders
+    Setup Loose File Directory    ${LooseFilesDuplicate}
+    Repack Loose Files     deleteFiles=${True}     deleteFolders=${True}
+    Verify Packed Output Exists
+    ${DirCount} =     Count Directories In Directory     ${LooseFileWorkspace}
+    Should Be Equal As Numbers    ${DirCount}     0
+    ${FileCount} =     Count Files In Directory     ${LooseFileWorkspace}
+    Should Be Equal As Numbers    ${FileCount}     0
+
+
+Repack T012 Without Deletion
+    [Tags]    repack     t0    t12     
+    Setup Loose File Directory    ${LooseFilesCleanAndDuplicate}
+    @{OldFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    Repack Loose Files     deleteFiles=${False}     deleteFolders=${False}
+    Verify Packed Output Exists
+    @{NewFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    Should Be Equal     ${OldFiles}     ${NewFiles}
+
+Repack T012 And Delete Files
+    [Tags]    repack    t0    t12    delete files
+    Setup Loose File Directory    ${LooseFilesCleanAndDuplicate}
+    @{OldFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    Repack Loose Files     deleteFiles=${True}     deleteFolders=${False}
+    Verify Packed Output Exists
+    @{NewFiles} =     List Files In Directory     ${LooseFileWorkspace}
+    FOR    ${File}     IN     @{NewFiles}
+        Should Not Contain Match     @{NewFiles}     @{OldFiles}
+    END
+
+Repack T012 And Delete Folders
+    [Tags]    repack    t0    t12    delete folders
+    Setup Loose File Directory    ${LooseFilesCleanAndDuplicate}
+    Repack Loose Files     deleteFiles=${False}     deleteFolders=${True}
+    Verify Packed Output Exists
+    ${DirCount} =     Count Directories In Directory     ${LooseFileWorkspace}
+    Should Be Equal As Numbers    ${DirCount}     0
+
+Repack T012 And Delete Files And Folders
+    [Tags]    repack    t0    t12    delete files    delete folders
+    Setup Loose File Directory    ${LooseFilesCleanAndDuplicate}
+    Repack Loose Files     deleteFiles=${True}     deleteFolders=${True}
+    Verify Packed Output Exists
+    ${DirCount} =     Count Directories In Directory     ${LooseFileWorkspace}
+    Should Be Equal As Numbers    ${DirCount}     0
+    ${FileCount} =     Count Files In Directory     ${LooseFileWorkspace}
+    Should Be Equal As Numbers    ${FileCount}     0
+
 
 
 *** Keywords ***
