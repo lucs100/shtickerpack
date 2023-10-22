@@ -99,13 +99,13 @@ def spaceDelimit(file_list: list, base_dir: str="") -> str:
         else:               targetMoveStr += (f"{base_dir}/{file} ") 
     return targetMoveStr.strip()
 
-def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False):
+def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, folder_list: str = "", output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False):
     """
     Manually repacks all folders specified in the file_list parameter. Can be str or simple iterable.
     Moves the output file to output_dir if specified (leaves in-place by default).
     """
-    if not isinstance(file_list, str): #assume iterable 
-        file_list_str = spaceDelimit(file_list) #no base_dir, as we're in the right cwd
+    if not isinstance(folder_list, str): #assume iterable 
+        file_list_str = spaceDelimit(folder_list) #no base_dir, as we're in the right cwd
     if file_list_str == "": return # no files passed
     
     if output_dir != None: prepDir(output_dir)
@@ -118,8 +118,9 @@ def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output
     if output_dir != None:
         shutil.move(f"{cwd}/{output_name}.mf", output_dir)
     if delete_mode:
-        for file in file_list:
-            shutil.rmtree(f"{cwd}/{file}")
+        for folder in folder_list:
+            try: shutil.rmtree(f"{cwd}/{folder}")
+            except FileNotFoundError: print(f"Skipping deletion of {cwd}/{folder}... (Doesn't exist)")
 
 
 def _repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "defaultPackName", output_dir: str = None) -> None:
@@ -129,7 +130,7 @@ def _repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_nam
     """
     folderList = os.listdir(target_dir)
     targetMoveList = list(filter(_isPhaseDir, folderList))
-    _repackList(cwd=target_dir, file_list=targetMoveList, output_name=output_name, output_dir=output_dir)
+    _repackList(cwd=target_dir, folder_list=targetMoveList, output_name=output_name, output_dir=output_dir)
 
 def prepDir(dir_name: str) -> bool:
     if not os.path.exists(dir_name):
@@ -229,7 +230,7 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
                 if not result.isClean():
                     for file, level in result.warnings.items():
                         print(f"Level {level} warning: {file}")
-    if strictMode:  _repackList(cwd=cwd, file_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
+    if strictMode:  _repackList(cwd=cwd, folder_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     else:           _repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     return overallResult
 
