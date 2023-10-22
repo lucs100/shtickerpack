@@ -6,7 +6,7 @@ sys.path.append(rootpath)
 
 import engine
 
-DEFAULT_LOOSE_FILES_DIR = f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack/test/loose_files"
+DEFAULT_LOOSE_FILES_DIR = f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack/sandbox/loose_files"
 DEFAULT_CONTENTPACKS_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
 
 class engineLib(object):

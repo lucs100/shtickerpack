@@ -1,6 +1,6 @@
 import pathlib, filecmp, typing, json
 
-pathToPhase = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output"
+pathToPhase = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output"
 
 phase = pathlib.Path(pathToPhase)
 

@@ -241,11 +241,11 @@ def modExists(outputDir: str, modName: str) -> bool:
 
 if __name__ == "__main__":
     #used for testing
-    # unpackDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_files", output_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output")
+    # unpackDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_files", output_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output")
     # movePhaseToDirectory()
-    # repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/example_output")
+    # repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output")
     
     # PHASE_LUT = loadLUT("./lut/file_lut.json")
-    # targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files"
+    # targetDir = "C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/loose_files"
     # repackAllLooseFiles(cwd=targetDir, output_name="loosePackTest")
     pass

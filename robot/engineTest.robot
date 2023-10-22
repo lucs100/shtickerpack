@@ -8,10 +8,10 @@ Test Teardown    Custom Test Teardown
 
 *** Variables ***
 ${ClashResources}            C:/Users/Lucas/AppData/Local/Corporate Clash/resources/contentpacks
-${LooseFileWorkspace}        C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/loose_files
-${LooseFilesClean}           C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_good_files
-${LooseFilesDuplicate}       C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_dupe_files
-${LooseFilesCleanAndDuplicate}     C:/Users/Lucas/Documents/projects/Python/shtickerpack/test/temp_good_and_dupe_files
+${LooseFileWorkspace}        C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/loose_files
+${LooseFilesClean}           C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/temp_good_files
+${LooseFilesDuplicate}       C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/temp_dupe_files
+${LooseFilesCleanAndDuplicate}     C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/temp_good_and_dupe_files
 ${True}     True
 ${False}    False
 
