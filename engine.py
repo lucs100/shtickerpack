@@ -207,7 +207,8 @@ def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False)
         
         result.folders = [pathlib.Path(fp).parts[0] for fp in filepaths] #all phase_x folders
         return result
-    return None
+    else:
+        result.warnings[filename] = 4 #not found in lut
 
 def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", 
     strictMode: bool = True, delete_file_mode: bool = False, delete_folder_mode: bool = False):
@@ -225,11 +226,11 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
-            overallResult.addResult(result)
-            if result is not None:
-                if not result.isClean():
-                    for file, level in result.warnings.items():
-                        print(f"Level {level} warning: {file}")
+            if 4 not in result.warnings.values(): #4 = not in lut
+                overallResult.addResult(result)
+            if not result.isClean():
+                for file, level in result.warnings.items():
+                    print(f"Level {level} warning: {file}") 
     if strictMode:  _repackList(cwd=cwd, folder_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     else:           _repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     return overallResult

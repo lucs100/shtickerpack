@@ -322,6 +322,8 @@ class ShtickerpackRepackTray(QGridLayout):
                                                                     delete_folder_mode=deleteFolders)
         if not result.isClean():
             #messy, but how do you refactor this?? probably easier to just be explicit
+            if (level4Files := result.getFilesAtLevel(4)) is not None:
+                msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
             if (level3Files := result.getFilesAtLevel(3)) is not None:
                 msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
             if (level2Files := result.getFilesAtLevel(2)) is not None:
@@ -337,18 +339,15 @@ class QHorizontalSpacer(QFrame):
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
 
+if __name__ == "__main__":
+    #QApplication object is the app, sys.argv are the cmd line args
+    app = QApplication(sys.argv)
 
-#QApplication object is the app, sys.argv are the cmd line args
-app = QApplication(sys.argv)
+    #create a widget (the window)
+    window = ShtickerpackMainWindow()
+    window.show() #need to explicitly show it, windows (w/o a visible parent) are hidden by default
 
-#create a widget (the window)
-window = ShtickerpackMainWindow()
-window.show() #need to explicitly show it, windows (w/o a visible parent) are hidden by default
+    #start the event loop
+    app.exec()
 
-#start the event loop
-app.exec()
-
-
-
-
-#reaches here once app exits and event loop stops
+    #reaches here once app exits and event loop stops
