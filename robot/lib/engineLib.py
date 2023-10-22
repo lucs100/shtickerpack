@@ -19,3 +19,6 @@ class engineLib(object):
     def repack_loose_files(self, sourceDir=DEFAULT_LOOSE_FILES_DIR, output_name="_TEST", deleteFiles=False, deleteFolders=False):
         engine.repackAllLooseFiles(cwd=sourceDir, output_name=output_name, output_dir=DEFAULT_CONTENTPACKS_DIR,
             delete_file_mode=deleteFiles, delete_folder_mode=deleteFolders)
+
+test = engineLib()
+test.repack_loose_files(deleteFolders=True)
