@@ -147,11 +147,17 @@ class phasePackResult:
         self.file: str = file
         self.warnings: "dict[str: int]" = warnings
 
+    def isClean(self) -> bool:
+        return (self.warnings == {})
+
 class phasePackOverallResult:
     def __init__(self, folders: list = [], files: list = [], warnings: "dict[str: int]" = {}):
         self.folders: list = folders
         self.files: list = files
         self.warnings: "dict[str: int]" = warnings
+    
+    def isClean(self) -> bool:
+        return (self.warnings == {})
     
     def addResult(self, result: phasePackResult):
         if result is None: return #file is not a phase file, should warn somehow... oh well #TODO
@@ -218,8 +224,9 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
             overallResult.addResult(result)
-            for file, level in result.warnings.items():
-                print(f"Level {level} warning: {file}")
+            if not result.isClean():
+                for file, level in result.warnings.items():
+                    print(f"Level {level} warning: {file}")
     if strictMode:  repackList(cwd=cwd, file_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     return overallResult
