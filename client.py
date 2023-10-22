@@ -273,7 +273,7 @@ class ShtickerpackRepackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select input phase file folder...",
-            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
+            directory = f"C:/Users/{getlogin()}"
         )
         if dir:
             path = pathlib.Path(dir)

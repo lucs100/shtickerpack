@@ -143,19 +143,19 @@ def loadLUT(fp: str) -> dict:
         return json.loads(file.read())
 
 class phasePackResult:
-    def __init__(self, folders: list = [], file: str = "", warnings: "dict[str: int]" = {}):
-        self.folders: list = folders
-        self.file: str = file
-        self.warnings: "dict[str: int]" = warnings
+    def __init__(self, folders: list = None, file: str = None, warnings: "dict[str: int]" = None):
+        self.folders: list = folders or list()
+        self.file: str = file or str()
+        self.warnings: "dict[str: int]" = warnings or dict()
 
     def isClean(self) -> bool:
         return (self.warnings == {})
 
 class phasePackOverallResult:
-    def __init__(self, folders: set = set(), files: list = [], warnings: "dict[str: int]" = {}):
-        self.folders: set = folders
-        self.files: list = files
-        self.warnings: "dict[str: int]" = warnings
+    def __init__(self, folders: set = None, files: list = None, warnings: "dict[str: int]" = None):
+        self.folders: set = folders or set()
+        self.files: list = files or list()
+        self.warnings: "dict[str: int]" = warnings or dict()
     
     def isClean(self) -> bool:
         return (self.warnings == {})
