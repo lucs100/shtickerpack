@@ -99,7 +99,7 @@ def spaceDelimit(file_list: list, base_dir: str="") -> str:
         else:               targetMoveStr += (f"{base_dir}/{file} ") 
     return targetMoveStr.strip()
 
-def repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False):
+def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False):
     """
     Manually repacks all folders specified in the file_list parameter. Can be str or simple iterable.
     Moves the output file to output_dir if specified (leaves in-place by default).
@@ -119,17 +119,17 @@ def repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, file_list: str = "", output_
         shutil.move(f"{cwd}/{output_name}.mf", output_dir)
     if delete_mode:
         for file in file_list:
-            os.remove(f"{cwd}/{file}")
+            shutil.rmtree(f"{cwd}/{file}")
 
 
-def repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "defaultPackName", output_dir: str = None) -> None:
+def _repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "defaultPackName", output_dir: str = None) -> None:
     """
     Repacks all phase_X folders in the target directory into a single multifile named output_name.mf.
     Optionally, creates this file in destination_dir.
     """
     folderList = os.listdir(target_dir)
     targetMoveList = list(filter(_isPhaseDir, folderList))
-    repackList(cwd=target_dir, file_list=targetMoveList, output_name=output_name, output_dir=output_dir)
+    _repackList(cwd=target_dir, file_list=targetMoveList, output_name=output_name, output_dir=output_dir)
 
 def prepDir(dir_name: str) -> bool:
     if not os.path.exists(dir_name):
@@ -151,8 +151,8 @@ class phasePackResult:
         return (self.warnings == {})
 
 class phasePackOverallResult:
-    def __init__(self, folders: list = [], files: list = [], warnings: "dict[str: int]" = {}):
-        self.folders: list = folders
+    def __init__(self, folders: set = set(), files: list = [], warnings: "dict[str: int]" = {}):
+        self.folders: set = folders
         self.files: list = files
         self.warnings: "dict[str: int]" = warnings
     
@@ -161,9 +161,9 @@ class phasePackOverallResult:
     
     def addResult(self, result: phasePackResult):
         if result is None: return #file is not a phase file, should warn somehow... oh well #TODO
-        self.folders.extend(result.folders)
+        self.folders.update(result.folders)
         self.files.append(result.file)
-        self.warnings.update(result.warnings) #3 different methods lol
+        self.warnings.update(result.warnings)
 
     def getFilesAtLevel(self, queryLevel: int) -> "list[str]":
         output = []
@@ -206,6 +206,7 @@ def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False)
         
         result.folders = [pathlib.Path(fp).parts[0] for fp in filepaths] #all phase_x folders
         return result
+    return None
 
 def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", 
     strictMode: bool = True, delete_file_mode: bool = False, delete_folder_mode: bool = False):
@@ -224,11 +225,12 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
             overallResult.addResult(result)
-            if not result.isClean():
-                for file, level in result.warnings.items():
-                    print(f"Level {level} warning: {file}")
-    if strictMode:  repackList(cwd=cwd, file_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
-    else:           repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
+            if result is not None:
+                if not result.isClean():
+                    for file, level in result.warnings.items():
+                        print(f"Level {level} warning: {file}")
+    if strictMode:  _repackList(cwd=cwd, file_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
+    else:           _repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
     return overallResult
 
 def modExists(outputDir: str, modName: str) -> bool:
