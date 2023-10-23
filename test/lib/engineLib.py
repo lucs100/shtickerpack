@@ -1,15 +1,15 @@
 import os
 import sys
 
-rootpath = os.path.abspath(f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack")
+rootpath = os.path.abspath(f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack") #manual, unfortunately
 sys.path.append(rootpath)
 
 from src import engine
 
-DEFAULT_LOOSE_FILES_DIR = f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack/sandbox/loose_files"
+DEFAULT_LOOSE_FILES_DIR = f"C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/loose_files" #could make generic... ehh
 DEFAULT_CONTENTPACKS_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
 DEFAULT_PHASE_INPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/default"
-DEFAULT_PHASE_OUTPUT_DIR =f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack/sandbox/example_output"
+DEFAULT_PHASE_OUTPUT_DIR =f"C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output" #sorry contributors :( help appreciated
 
 class engineLib(object):
     #ROBOT_LIBRARY_VERSION = __version__
@@ -17,6 +17,8 @@ class engineLib(object):
 
     def __init__(self):
         pass
+
+    engine.PHASE_LUT = engine.loadLUT("C:/Users/Lucas/Documents/projects/Python/shtickerpack/src/assets/lut/file_lut.json")
 
     def repack_loose_files(self, sourceDir=DEFAULT_LOOSE_FILES_DIR, output_name="_TEST", deleteFiles=False, deleteFolders=False):
         engine.repackAllLooseFiles(cwd=sourceDir, output_name=output_name, output_dir=DEFAULT_CONTENTPACKS_DIR,

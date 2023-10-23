@@ -3,15 +3,16 @@ Documentation     The test suite for the shtickerpack engine.
 Library    OperatingSystem
 Library    Collections
 Library    ./lib/engineLib.py
-Test Setup    Custom Test Setup
-Test Teardown    Custom Test Teardown
+Suite Setup     Repack Suite Setup
+Test Setup    Repack Test Setup
+Test Teardown    Repack Test Teardown
 
 *** Variables ***
 ${ClashResources}            C:/Users/Lucas/AppData/Local/Corporate Clash/resources/contentpacks
 ${LooseFileWorkspace}        C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/loose_files
-${LooseFilesClean}           C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/temp_good_files
-${LooseFilesDuplicate}       C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/temp_dupe_files
-${LooseFilesCleanAndDuplicate}     C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/temp_good_and_dupe_files
+${LooseFilesClean}           C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/test_good_files
+${LooseFilesDuplicate}       C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/test_dupe_files
+${LooseFilesCleanAndDuplicate}     C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/test_good_and_dupe_files
 ${True}     True
 ${False}    False
 
@@ -135,11 +136,14 @@ Repack T012 And Delete Files And Folders
 
 
 *** Keywords ***
-Custom Test Setup
+Repack Suite Setup
+    Set Log Level     DEBUG
+
+Repack Test Setup
     Remove File     ${ClashResources}/_TEST.mf
     Empty Directory     ${LooseFileWorkspace}
 
-Custom Test Teardown
+Repack Test Teardown
     Remove File     ${ClashResources}/_TEST.mf
     Empty Directory     ${LooseFileWorkspace}
 

@@ -3,6 +3,7 @@ Documentation     The test suite for the shtickerpack engine.
 Library    OperatingSystem
 Library    Collections
 Library    ./lib/engineLib.py
+Suite Setup     Unpack Suite Setup
 
 *** Variables ***
 ${ClashResources}            C:/Users/Lucas/AppData/Local/Corporate Clash/resources/contentpacks
@@ -30,4 +31,5 @@ Unpack Default Files
 
     
 *** Keywords ***
-    
+Unpack Suite Setup
+    Set Log Level     DEBUG

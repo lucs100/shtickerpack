@@ -1,8 +1,9 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
 import engine
-from os import getlogin
+import os
 import pathlib
+from subprocess import CalledProcessError
 
 #to get cmd line args
 import sys
@@ -38,7 +39,11 @@ class ShtickerpackMainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("shtickerpack beta")
-        self.setWindowIcon(QIcon("shtickerpack.png"))
+        if getattr(sys, 'frozen', False):
+            iconPath = os.path.join(sys._MEIPASS, "assets/shtickerpack.png")
+        else: iconPath = "./assets/shtickerpack.png"
+        print(iconPath)
+        self.setWindowIcon(QIcon(iconPath))
         self.setFixedSize(1000, 375) #minimal height
 
         self.mainContainer = QWidget()
@@ -97,8 +102,8 @@ class ShtickerpackUnpackTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_INPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/default"
-        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/vanilla"
+        self.DEFAULT_INPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/default"
+        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/vanilla"
 
         self.inputDirHint = QLabel("Get phase files (.mf) from:")
         self.inputDirHint.setFixedWidth(150)
@@ -146,7 +151,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select input phase file folder...",
-            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/default"
+            directory = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/default"
         )
         if dir:
             path = pathlib.Path(dir)
@@ -157,7 +162,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select output phase file folder...",
-            directory = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources"
+            directory = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources"
         )
         if dir:
             path = pathlib.Path(dir)
@@ -191,11 +196,16 @@ class ShtickerpackUnpackTray(QGridLayout):
 
         if engine.checkOutputDirectoryValid(destinationDir):
             button.setText("Unpacking... just a sec!")
-            engine.unpackDirectory(sourceDir, destinationDir)
-            msg = QMessageBox.information(None, "de-multify", "Folder unpacked!")
-            button.setText("Go!")
+            try:
+                engine.unpackDirectory(sourceDir, destinationDir)
+            except CalledProcessError:
+                msg = QMessageBox.critical(None, "Warning!", "Multify error! Please let me know ASAP on GitHub.")
+            else: 
+                msg = QMessageBox.information(None, "de-multify", "Folder unpacked!")
+            finally:
+                button.setText("Go!")
         else:
-            msg = QMessageBox.critical(None, "de-multify error", 
+            msg = QMessageBox.warning(None, "Alert!", 
                 "The output folder doesn't exist or already has phase folders inside!")
 
 class ShtickerpackRepackTray(QGridLayout):
@@ -203,8 +213,8 @@ class ShtickerpackRepackTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_LOOSE_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject" #TODO: really??
-        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
+        self.DEFAULT_LOOSE_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject" #TODO: really??
+        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
 
         self.inputDirHint = QLabel("Custom asset folder:")
         self.inputDirHint.setFixedWidth(150)
@@ -276,7 +286,7 @@ class ShtickerpackRepackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select input phase file folder...",
-            directory = f"C:/Users/{getlogin()}"
+            directory = f"C:/Users/{os.getlogin()}"
         )
         if dir:
             path = pathlib.Path(dir)
@@ -318,23 +328,29 @@ class ShtickerpackRepackTray(QGridLayout):
         if engine.modExists(self.DEFAULT_OUTPUT_DIR, modName):
             msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder ({outputDir})!")
             return False
-        result: engine.phasePackOverallResult = engine.repackAllLooseFiles(cwd=dir, 
-                                                                    output_dir=outputDir, 
-                                                                    output_name=modName, 
-                                                                    delete_file_mode=deleteFiles, 
-                                                                    delete_folder_mode=deleteFolders)
-        if not result.isClean():
-            #messy, but how do you refactor this?? probably easier to just be explicit
-            if (level4Files := result.getFilesAtLevel(4)) is not None:
-                msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
-            if (level3Files := result.getFilesAtLevel(3)) is not None:
-                msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
-            if (level2Files := result.getFilesAtLevel(2)) is not None:
-                msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-            if (level1Files := result.getFilesAtLevel(1)) is not None:
-                msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-        msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
-        return True
+        button.setText("Repacking... just a sec!")
+        try:
+            result: engine.phasePackOverallResult = engine.repackAllLooseFiles(cwd=dir, 
+                                                                        output_dir=outputDir, 
+                                                                        output_name=modName, 
+                                                                        delete_file_mode=deleteFiles, 
+                                                                        delete_folder_mode=deleteFolders)
+            if not result.isClean():
+                #messy, but how do you refactor this?? probably easier to just be explicit
+                if (level4Files := result.getFilesAtLevel(4)) is not None:
+                    msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
+                if (level3Files := result.getFilesAtLevel(3)) is not None:
+                    msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
+                if (level2Files := result.getFilesAtLevel(2)) is not None:
+                    msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+                if (level1Files := result.getFilesAtLevel(1)) is not None:
+                    msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+            msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
+        except CalledProcessError:
+            msg = QMessageBox.critical(None, "Warning!", "Multify error! Please let me know ASAP on GitHub.")
+        finally:
+            button.setText("Go!")
+        
 
 class QHorizontalSpacer(QFrame):
     def __init__(self):

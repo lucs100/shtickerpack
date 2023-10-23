@@ -1,10 +1,10 @@
-import os, re, shutil, time, subprocess, json, pathlib
+import os, re, shutil, time, subprocess, json, pathlib, sys
 
 CWD_PATH = os.path.dirname(__file__)
-MULTIFY_PATH = os.path.join(CWD_PATH, "panda3d", "multify.exe")
-#might want to remove on release? not helpful
-DEFAULT_TARGET_FILE_PATH = os.path.join(CWD_PATH, "test", "example_files")
-DEFAULT_DESTINATION_PATH = os.path.join(CWD_PATH, "test", "example_output")
+if getattr(sys, 'frozen', False):
+    MULTIFY_PATH = os.path.join(sys._MEIPASS, "panda3d/multify.exe")
+else:
+    MULTIFY_PATH = os.path.join(CWD_PATH, "panda3d", "multify.exe")
 PHASE_LUT = {}
 
 class TTScaryFileException(Exception):
@@ -38,11 +38,11 @@ def _unpackFile(dir: str, filename: str, target_dir: str=CWD_PATH):
     By default, leaves phase_X folders in the current directory. Optional target_dir changes this behaviour.
     """
     start = time.time()
-    subprocess.run(f"{MULTIFY_PATH} -x -f \"{dir}/{filename}\"", shell=True, cwd=target_dir)
+    subprocess.run(f"{MULTIFY_PATH} -x -f \"{dir}/{filename}\"", shell=True, cwd=target_dir, check=True)
     end = time.time()    
     print(f"Unpacked {filename}! \t took {round(end-start, 2)}s")
 
-def unpackDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_dir: str=CWD_PATH, strict_mode: bool = True) -> bool:
+def unpackDirectory(target_dir: str, output_dir: str=CWD_PATH, strict_mode: bool = True) -> bool:
     """
     Uses the multify tool to unpack all Panda3D multifiles in a directory.
     By default, leaves output folders in the current directory. destination_dir changes this behaviour.
@@ -74,7 +74,7 @@ def checkOutputDirectoryValid(targetDir: str) -> bool:
     """
     return os.path.exists(targetDir) and _checkTargetUnphased(targetDir)
 
-def movePhaseToDirectory(fromPath=CWD_PATH, toPath=DEFAULT_DESTINATION_PATH) -> None:
+def movePhaseToDirectory(fromPath, toPath) -> None:
     """
     Moves all phase_X folders found in directory fromPath to the directory toPath.
     Convenience function, use unpackDirectory() with parameter target_dir for less mess where possible
@@ -99,7 +99,7 @@ def spaceDelimit(file_list: list, base_dir: str="") -> str:
         else:               targetMoveStr += (f"{base_dir}/{file} ") 
     return targetMoveStr.strip()
 
-def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, folder_list: str = "", output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False):
+def _repackList(cwd: str, folder_list: str, output_name: str = "defaultPackName", output_dir: str = None, delete_mode: bool = False) -> bool:
     """
     Manually repacks all folders specified in the file_list parameter. Can be str or simple iterable.
     Moves the output file to output_dir if specified (leaves in-place by default).
@@ -112,7 +112,7 @@ def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, folder_list: str = "", outp
     
     print(f"Beginning repack! This may take a few seconds...")
     start = time.time()
-    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list_str}", shell=True, cwd=cwd)
+    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list_str}", shell=True, cwd=cwd, check=True)
     end = time.time()
     print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
     if output_dir != None:
@@ -122,8 +122,7 @@ def _repackList(cwd: str = DEFAULT_TARGET_FILE_PATH, folder_list: str = "", outp
             try: shutil.rmtree(f"{cwd}/{folder}")
             except FileNotFoundError: print(f"Skipping deletion of {cwd}/{folder}... (Doesn't exist)")
 
-
-def _repackAllInDirectory(target_dir: str = DEFAULT_TARGET_FILE_PATH, output_name: str = "defaultPackName", output_dir: str = None) -> None:
+def _repackAllInDirectory(target_dir: str, output_name: str = "defaultPackName", output_dir: str = None) -> None:
     """
     Repacks all phase_X folders in the target directory into a single multifile named output_name.mf.
     Optionally, creates this file in destination_dir.
@@ -221,7 +220,11 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     """
     #TODO: recursive mode
     global PHASE_LUT
-    if PHASE_LUT == {}: PHASE_LUT = loadLUT("./lut/file_lut.json")
+    if getattr(sys, 'frozen', False):
+        lutPath = os.path.join(sys._MEIPASS, "assets/lut/file_lut.json")
+    else: 
+        lutPath = "./assets/lut/file_lut.json"
+    if PHASE_LUT == {}: PHASE_LUT = loadLUT(lutPath)
     overallResult = phasePackOverallResult()
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
@@ -243,7 +246,7 @@ def modExists(outputDir: str, modName: str) -> bool:
 if __name__ == "__main__":
     #used for testing
     # unpackDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_files", output_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output")
-    # movePhaseToDirectory()
+    # movePhaseToDirectory("C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_files", "C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output")
     # repackAllInDirectory(target_dir="C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output")
     
     # PHASE_LUT = loadLUT("./lut/file_lut.json")
