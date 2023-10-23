@@ -155,3 +155,4 @@ cython_debug/
 LUT/temp_lut.json
 /results
 !/robot/lib
+!/test

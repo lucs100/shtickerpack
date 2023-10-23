@@ -4,7 +4,7 @@ import sys
 rootpath = os.path.abspath(f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack")
 sys.path.append(rootpath)
 
-import engine
+from src import engine
 
 DEFAULT_LOOSE_FILES_DIR = f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack/sandbox/loose_files"
 DEFAULT_CONTENTPACKS_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
