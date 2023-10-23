@@ -170,25 +170,28 @@ class ShtickerpackUnpackTray(QGridLayout):
     def setDefaultOutputDir(self):
         self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
     
+    def handlePathErrors(self, inputPath: str, outputPath: str) -> bool:
+        if inputPath == "":
+            msg = QMessageBox.warning(None, "No input!", "Select an input folder first.")
+            return False
+        if outputPath == "":
+            msg = QMessageBox.warning(None, "No outut!", "Select an output folder first.")
+            return False
+        if inputPath == outputPath:
+            msg = QMessageBox.warning(None, "Warning!", "The input and output folders can't be the same.")
+            return False
+        return True
+    
     def unpackTargetDir(self, button: QPushButton): #async? lots of extra logic 
-        #this is a mess already
-        if self.inputDirPath.text() == "":
-            self.inputDirPath.setText(self.DEFAULT_INPUT_DIR)
-        if self.outputDirPath.text() in ["", self.DEFAULT_OUTPUT_DIR]: #force vanilla dupe case
-            self.outputDirPath.setText(self.DEFAULT_OUTPUT_DIR)
-            if not engine.prepDir(self.DEFAULT_OUTPUT_DIR):
-                #is this neccesary? not rn
-                pass
-                # msg = QMessageBox.warning(None, "de-multify error",
-                #     "You already have a vanilla folder. Rename it or choose a different folder.")
-                # return
+        sourceDir = self.inputDirPath.text()
+        destinationDir = self.outputDirPath.text()
 
-        target_dir = self.inputDirPath.text()
-        destination_dir = self.outputDirPath.text()
+        if not self.handlePathErrors(sourceDir, destinationDir):
+            return False
 
-        if engine.checkOutputDirectoryValid(destination_dir):
+        if engine.checkOutputDirectoryValid(destinationDir):
             button.setText("Unpacking... just a sec!")
-            engine.unpackDirectory(target_dir, destination_dir)
+            engine.unpackDirectory(sourceDir, destinationDir)
             msg = QMessageBox.information(None, "de-multify", "Folder unpacked!")
             button.setText("Go!")
         else:
