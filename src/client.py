@@ -1,3 +1,4 @@
+#from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTabWidget, QGroupBox, QGridLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox, QSizePolicy, QFrame, QApplication
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
 import engine
@@ -40,7 +41,7 @@ class ShtickerpackMainWindow(QMainWindow):
 
         self.setWindowTitle("shtickerpack beta")
         if getattr(sys, 'frozen', False):
-            iconPath = os.path.join(sys._MEIPASS, "assets/shtickerpack.png")
+            iconPath = os.path.join(sys._MEIPASS, "./src/assets/shtickerpack.png")
         else: iconPath = "./assets/shtickerpack.png"
         print(iconPath)
         self.setWindowIcon(QIcon(iconPath))
@@ -102,8 +103,8 @@ class ShtickerpackUnpackTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_INPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/default"
-        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/vanilla"
+        self.DEFAULT_INPUT_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\default"
+        self.DEFAULT_OUTPUT_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\vanilla"
 
         self.inputDirHint = QLabel("Get phase files (.mf) from:")
         self.inputDirHint.setFixedWidth(150)
@@ -151,7 +152,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select input phase file folder...",
-            directory = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/default"
+            directory = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\default"
         )
         if dir:
             path = pathlib.Path(dir)
@@ -162,7 +163,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select output phase file folder...",
-            directory = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources"
+            directory = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources"
         )
         if dir:
             path = pathlib.Path(dir)
@@ -198,8 +199,10 @@ class ShtickerpackUnpackTray(QGridLayout):
             button.setText("Unpacking... just a sec!")
             try:
                 engine.unpackDirectory(sourceDir, destinationDir)
-            except CalledProcessError:
-                msg = QMessageBox.critical(None, "Warning!", "Multify error! Please let me know ASAP on GitHub.")
+            except CalledProcessError as e:
+                msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e}")
+            except Exception as e:
+                msg = QMessageBox.critical(None, "Warning!", f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e}")
             else: 
                 msg = QMessageBox.information(None, "de-multify", "Folder unpacked!")
             finally:
@@ -213,8 +216,8 @@ class ShtickerpackRepackTray(QGridLayout):
         super().__init__()
 
         self.identifier = identifier
-        self.DEFAULT_LOOSE_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/workspace/myProject" #TODO: really??
-        self.DEFAULT_OUTPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
+        self.DEFAULT_LOOSE_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\workspace\\myProject" #TODO: really??
+        self.DEFAULT_OUTPUT_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\contentpacks"
 
         self.inputDirHint = QLabel("Custom asset folder:")
         self.inputDirHint.setFixedWidth(150)
@@ -286,7 +289,7 @@ class ShtickerpackRepackTray(QGridLayout):
         dir = QFileDialog.getExistingDirectory(
             None,
             caption = "Select input phase file folder...",
-            directory = f"C:/Users/{os.getlogin()}"
+            directory = f"C:\\Users\\{os.getlogin()}"
         )
         if dir:
             path = pathlib.Path(dir)

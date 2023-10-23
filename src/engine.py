@@ -2,9 +2,10 @@ import os, re, shutil, time, subprocess, json, pathlib, sys
 
 CWD_PATH = os.path.dirname(__file__)
 if getattr(sys, 'frozen', False):
-    MULTIFY_PATH = os.path.join(sys._MEIPASS, "panda3d/multify.exe")
+    print(sys._MEIPASS)
+    MULTIFY_PATH = os.path.join(sys._MEIPASS, ".\src\panda3d\multify.exe")
 else:
-    MULTIFY_PATH = os.path.join(CWD_PATH, "panda3d", "multify.exe")
+    MULTIFY_PATH = os.path.join(CWD_PATH, ".\panda3d\multify.exe")
 PHASE_LUT = {}
 
 class TTScaryFileException(Exception):
@@ -221,9 +222,9 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     #TODO: recursive mode
     global PHASE_LUT
     if getattr(sys, 'frozen', False):
-        lutPath = os.path.join(sys._MEIPASS, "assets/lut/file_lut.json")
+        lutPath = os.path.join(sys._MEIPASS, "./src/assets/file_lut.json")
     else: 
-        lutPath = "./assets/lut/file_lut.json"
+        lutPath = "./assets/file_lut.json"
     if PHASE_LUT == {}: PHASE_LUT = loadLUT(lutPath)
     overallResult = phasePackOverallResult()
     for item in pathlib.Path(cwd).iterdir():
