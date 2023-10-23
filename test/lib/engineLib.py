@@ -18,7 +18,7 @@ class engineLib(object):
     def __init__(self):
         pass
 
-    engine.PHASE_LUT = engine.loadLUT("C:/Users/Lucas/Documents/projects/Python/shtickerpack/src/assets/lut/file_lut.json")
+    engine.PHASE_LUT = engine.loadLUT("C:/Users/Lucas/Documents/projects/Python/shtickerpack/src/assets/file_lut.json")
 
     def repack_loose_files(self, sourceDir=DEFAULT_LOOSE_FILES_DIR, output_name="_TEST", deleteFiles=False, deleteFolders=False):
         engine.repackAllLooseFiles(cwd=sourceDir, output_name=output_name, output_dir=DEFAULT_CONTENTPACKS_DIR,

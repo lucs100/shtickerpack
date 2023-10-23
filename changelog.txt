@@ -1,0 +1,4 @@
+v1.0 - October 23, 2023
+Initial release of shtickerpack! Supports:
+* Unpacking .mf files. Automatically tries to locate a Clash installation to do so.
+* Repacking loose asset files to a single .mf file, with folders stacked as required for Clash.

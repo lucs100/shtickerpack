@@ -3,9 +3,9 @@ import os, re, shutil, time, subprocess, json, pathlib, sys
 CWD_PATH = os.path.dirname(__file__)
 if getattr(sys, 'frozen', False):
     print(sys._MEIPASS)
-    MULTIFY_PATH = os.path.join(sys._MEIPASS, ".\src\panda3d\multify.exe")
+    MULTIFY_PATH = os.path.join(sys._MEIPASS, "src\panda3d\multify.exe")
 else:
-    MULTIFY_PATH = os.path.join(CWD_PATH, ".\panda3d\multify.exe")
+    MULTIFY_PATH = os.path.join(CWD_PATH, "panda3d\multify.exe")
 PHASE_LUT = {}
 
 class TTScaryFileException(Exception):
@@ -39,7 +39,8 @@ def _unpackFile(dir: str, filename: str, target_dir: str=CWD_PATH):
     By default, leaves phase_X folders in the current directory. Optional target_dir changes this behaviour.
     """
     start = time.time()
-    subprocess.run(f"{MULTIFY_PATH} -x -f \"{dir}/{filename}\"", shell=True, cwd=target_dir, check=True)
+    print(f"\"{MULTIFY_PATH}\" -x -f \"{dir}/{filename}\"")
+    subprocess.run(f"\"{MULTIFY_PATH}\" -x -f \"{dir}/{filename}\"", shell=True, cwd=target_dir, check=True)
     end = time.time()    
     print(f"Unpacked {filename}! \t took {round(end-start, 2)}s")
 
@@ -113,7 +114,8 @@ def _repackList(cwd: str, folder_list: str, output_name: str = "defaultPackName"
     
     print(f"Beginning repack! This may take a few seconds...")
     start = time.time()
-    subprocess.run(f"{MULTIFY_PATH} -c -f {output_name}.mf {file_list_str}", shell=True, cwd=cwd, check=True)
+    print(f"\"{MULTIFY_PATH}\" -c -f {output_name}.mf {file_list_str}")
+    subprocess.run(f"\"{MULTIFY_PATH}\" -c -f {output_name}.mf {file_list_str}", shell=True, cwd=cwd, check=True)
     end = time.time()
     print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
     if output_dir != None:

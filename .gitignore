@@ -154,5 +154,7 @@ cython_debug/
 /phase**
 LUT/temp_lut.json
 /results
-!/robot/lib
+!/test/lib
 !/test
+/BUILD_INFO
+/BUILD_ARTIFACTS

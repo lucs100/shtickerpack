@@ -42,7 +42,7 @@ class ShtickerpackMainWindow(QMainWindow):
         #call the init method of QMainWindow
         super().__init__()
 
-        self.setWindowTitle("shtickerpack beta")
+        self.setWindowTitle("shtickerpack v1.0")
         if getattr(sys, 'frozen', False):
             iconPath = os.path.join(sys._MEIPASS, "./src/assets/shtickerpack.png")
         else: iconPath = "./assets/shtickerpack.png"
@@ -208,9 +208,9 @@ class ShtickerpackUnpackTray(QGridLayout):
             try:
                 engine.unpackDirectory(sourceDir, destinationDir)
             except CalledProcessError as e:
-                msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e}")
+                msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
             except Exception as e:
-                msg = QMessageBox.critical(None, "Warning!", f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e}")
+                msg = QMessageBox.critical(None, "Warning!", f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
             else: 
                 msg = QMessageBox.information(None, "Success!", "Folder unpacked!")
             finally:
@@ -359,7 +359,7 @@ class ShtickerpackRepackTray(QGridLayout):
                     msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
             msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
         except CalledProcessError as e:
-            msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e}")
+            msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
         finally:
             button.setText("Go!")
         
