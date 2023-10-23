@@ -13,9 +13,12 @@ import sys
 #TODO: for .mf unpacker, options should include which phase to unpack? checklist? in-client guide?
 
 #dummy syscall to get taskbar icon LOL
-import ctypes
-myappid = 'shtickerpack' # arbitrary string
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+try:
+    import ctypes
+    myappid = 'lucs100.shtickerpack' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+except ImportError:
+    pass
 
 UNPACK_HELP_STR = ("Clash stores its resource files as <i>phase files</i>, in <b><code>.mf</b></code> files (known as multifiles). " +
                    "They're stored in the <b><code>/Corporate Clash/resources/default/</b></code> folder. <br>" +
@@ -27,7 +30,7 @@ UNPACK_HELP_STR = ("Clash stores its resource files as <i>phase files</i>, in <b
 
 REPACK_HELP_STR = ("Once you've unpack the phase files, you can change files and repack them into a mod. " +
                    "Copy each file you'd like to change into a new folder (ex. <b><code>desktop/myContentPack/</code></b>). <br>"
-                   "When you're happy with your changes, select that folder in the Repack Assets tray below. <br>" +
+                   "Once you're happy with your changes, select the folder with your changed files in the Repack Assets tray below. <br>" +
                    "shtickerpack will automatically pack your changes into a mod as an a .mf file, " +
                    "and move it to <b><code>/Corporate Clash/resources/contentpacks/</code></b>. <br>" +
                    "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
@@ -59,7 +62,7 @@ class ShtickerpackMainWindow(QMainWindow):
         self.tab2 = QWidget()
 
         self.unpackInfoPanel = ShtickerpackInfoTray(UNPACK_HELP_STR)
-        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "How to Unpack")
+        self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "Unpacking Instructions")
         self.unpackInfoGroup.setFixedHeight(110)
         self.unpackPanel = ShtickerpackUnpackTray()
         self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
@@ -70,7 +73,7 @@ class ShtickerpackMainWindow(QMainWindow):
         self.tabs.addTab(self.tab1, "Unpack")
 
         self.repackInfoPanel = ShtickerpackInfoTray(REPACK_HELP_STR)
-        self.repackInfoGroup = ShtickerpackTitledPanel(self.repackInfoPanel, "How to Repack")
+        self.repackInfoGroup = ShtickerpackTitledPanel(self.repackInfoPanel, "Repacking Instructions")
         self.repackInfoGroup.setFixedHeight(110)
         self.repackFilePanel = ShtickerpackRepackTray()
         self.repackGroup = ShtickerpackTitledPanel(self.repackFilePanel, "Repack assets into .mf files")
@@ -188,15 +191,20 @@ class ShtickerpackUnpackTray(QGridLayout):
             return False
         return True
     
-    def unpackTargetDir(self, button: QPushButton): #async? lots of extra logic 
+    def unpackTargetDir(self, button: QPushButton):
+        #TODO: make this spawn a QThread, it's unresponsive at the moment
         sourceDir = self.inputDirPath.text()
         destinationDir = self.outputDirPath.text()
 
         if not self.handlePathErrors(sourceDir, destinationDir):
             return False
+        
+        if not os.path.exists(destinationDir):
+            os.mkdir(destinationDir)
 
         if engine.checkOutputDirectoryValid(destinationDir):
             button.setText("Unpacking... just a sec!")
+            print("Beginning unpack...")
             try:
                 engine.unpackDirectory(sourceDir, destinationDir)
             except CalledProcessError as e:
@@ -204,7 +212,7 @@ class ShtickerpackUnpackTray(QGridLayout):
             except Exception as e:
                 msg = QMessageBox.critical(None, "Warning!", f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e}")
             else: 
-                msg = QMessageBox.information(None, "de-multify", "Folder unpacked!")
+                msg = QMessageBox.information(None, "Success!", "Folder unpacked!")
             finally:
                 button.setText("Go!")
         else:
@@ -317,6 +325,7 @@ class ShtickerpackRepackTray(QGridLayout):
                 button.setChecked(False)
     
     def repackTargetDir(self, button: QPushButton):
+        #TODO: make this spawn a QThread, it's unresponsive at the moment
         deleteFiles = self.delFilesModeBox.isChecked()
         deleteFolders = self.delFoldersModeBox.isChecked()
         outputDir = None
@@ -329,7 +338,7 @@ class ShtickerpackRepackTray(QGridLayout):
             msg = QMessageBox.critical(None, "Invalid mod name!", "Your mod name can only be alphanumeric! Note your mod name shouldn't end with '.mf'.")
             return False
         if engine.modExists(self.DEFAULT_OUTPUT_DIR, modName):
-            msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder ({outputDir})!")
+            msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder!\n({outputDir})")
             return False
         button.setText("Repacking... just a sec!")
         try:
@@ -349,8 +358,8 @@ class ShtickerpackRepackTray(QGridLayout):
                 if (level1Files := result.getFilesAtLevel(1)) is not None:
                     msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
             msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
-        except CalledProcessError:
-            msg = QMessageBox.critical(None, "Warning!", "Multify error! Please let me know ASAP on GitHub.")
+        except CalledProcessError as e:
+            msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e}")
         finally:
             button.setText("Go!")
         
