@@ -192,8 +192,10 @@ class ShtickerpackUnpackTray(QGridLayout):
             return False
         return True
     
+    def handleUnpackResult(self, result: "ThreadResult"):
+        result.messageType(None, result.title, result.text)
+    
     def unpackTargetDir(self, button: QPushButton):
-        #TODO: make this spawn a QThread, it's unresponsive at the moment
         sourceDir = self.inputDirPath.text()
         destinationDir = self.outputDirPath.text()
 
@@ -203,22 +205,33 @@ class ShtickerpackUnpackTray(QGridLayout):
         if not os.path.exists(destinationDir):
             os.mkdir(destinationDir)
 
-        if engine.checkOutputDirectoryValid(destinationDir):
-            button.setText("Unpacking... just a sec!")
-            print("Beginning unpack...")
-            try:
-                engine.unpackDirectory(sourceDir, destinationDir)
-            except CalledProcessError as e:
-                msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
-            except Exception as e:
-                msg = QMessageBox.critical(None, "Warning!", f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
-            else: 
-                msg = QMessageBox.information(None, "Success!", "Folder unpacked!")
-            finally:
-                button.setText("Go!")
-        else:
+        if not engine.checkOutputDirectoryValid(destinationDir):
             msg = QMessageBox.warning(None, "Alert!", 
                 "The output folder doesn't exist or already has phase folders inside!")
+            return
+        
+        #checks ok, we can proceed
+        button.setText("Unpacking... just a sec!")
+        print("Beginning unpack...")
+        button.setEnabled(False)
+
+        self.thread = QThread()
+        self.worker = UnpackWorker(sourceDir=sourceDir, destinationDir=destinationDir)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.thread.finished.connect(self.worker.deleteLater)
+        self.worker.result.connect(self.handleUnpackResult)
+        self.thread.start()
+        
+        #setup triggers for when thread is done
+        self.thread.finished.connect(
+            lambda: button.setEnabled(True)
+        )
+        self.thread.finished.connect(
+            lambda: button.setText("Go!")
+        )
+        
 
 class ShtickerpackRepackTray(QGridLayout):
     def __init__(self, identifier: str = "RepackTray"):
@@ -325,8 +338,24 @@ class ShtickerpackRepackTray(QGridLayout):
             if result == QMessageBox.StandardButton.No:
                 button.setChecked(False)
     
+    def handleRepackResultData(self, repackResult: engine.phasePackOverallResult):
+        if not repackResult.isClean():
+            #messy, but how do you refactor this?? probably easier to just be explicit
+            if (level4Files := repackResult.getFilesAtLevel(4)) is not None:
+                msg4 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
+            if (level3Files := repackResult.getFilesAtLevel(3)) is not None:
+                msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
+            if (level2Files := repackResult.getFilesAtLevel(2)) is not None:
+                msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+            if (level1Files := repackResult.getFilesAtLevel(1)) is not None:
+                msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+            if len(repackResult.files) == 0:
+                msg = QMessageBox.information(None, "Note!", "There aren't any valid files in that folder.")
+        
+    def handleRepackResultThread(self, threadResult: "ThreadResult"): 
+        threadResult.messageType(None, threadResult.title, threadResult.text)
+    
     def repackTargetDir(self, button: QPushButton):
-        #TODO: make this spawn a QThread, it's unresponsive at the moment
         deleteFiles = self.delFilesModeBox.isChecked()
         deleteFolders = self.delFoldersModeBox.isChecked()
         outputDir = None
@@ -343,18 +372,25 @@ class ShtickerpackRepackTray(QGridLayout):
             return False
         #no pre-pack errors, we are good to go
         button.setText("Repacking... just a sec!")
+        print("Beginning repack...")
         button.setEnabled(False)
         #incantations to run unpacker as a separate thread, via UnpackWorker()
         self.thread = QThread()
-        self.worker = UnpackWorker(dir=dir, outputDir=outputDir, modName=modName, deleteFiles=deleteFiles, deleteFolders=deleteFolders)
+        self.worker = RepackWorker(dir=dir, outputDir=outputDir, modName=modName, deleteFiles=deleteFiles, deleteFolders=deleteFolders)
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.thread.quit)
         self.thread.finished.connect(self.worker.deleteLater)
+        self.worker.result.connect(self.handleRepackResultData)
+        self.worker.finished.connect(self.handleRepackResultThread)
         self.thread.start()
 
-        button.setEnabled(True)
-        button.setText("Go!")
+        self.thread.finished.connect(
+            lambda: button.setEnabled(True)
+        )
+        self.thread.finished.connect(
+            lambda: button.setText("Go!")
+        )
 
 class QHorizontalSpacer(QFrame):
     def __init__(self):
@@ -362,12 +398,20 @@ class QHorizontalSpacer(QFrame):
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
 
-class UnpackWorker(QObject):
-    finished = pyqtSignal()
+class ThreadResult():
+    def __init__(self, ok: bool, style: QMessageBox = None, title: str = None, text: str = None):
+        self.ok = ok
+        self.messageType = style
+        self.title = title
+        self.text = text
+
+class RepackWorker(QObject):
+    result = pyqtSignal(engine.phasePackOverallResult) 
+    finished = pyqtSignal(ThreadResult)
     #progress = pyqtSignal(int)
 
     def __init__(self, dir, outputDir, modName, deleteFiles, deleteFolders):
-        super(UnpackWorker, self).__init__()
+        super(RepackWorker, self).__init__()
         self.dir = dir
         self.outputDir = outputDir
         self.modName = modName
@@ -377,29 +421,51 @@ class UnpackWorker(QObject):
     def run(self):
         """Launch the unpacking process."""
         try:
-            result: engine.phasePackOverallResult = engine.repackAllLooseFiles(
+            data: engine.phasePackOverallResult = engine.repackAllLooseFiles(
                 cwd=self.dir, 
                 output_dir=self.outputDir, 
                 output_name=self.modName, 
                 delete_file_mode=self.deleteFiles, 
-                delete_folder_mode=self.deleteFolders)
-            if not result.isClean():
-                #messy, but how do you refactor this?? probably easier to just be explicit
-                if (level4Files := result.getFilesAtLevel(4)) is not None:
-                    msg4 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
-                if (level3Files := result.getFilesAtLevel(3)) is not None:
-                    msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
-                if (level2Files := result.getFilesAtLevel(2)) is not None:
-                    msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-                if (level1Files := result.getFilesAtLevel(1)) is not None:
-                    msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-                if len(result.files) == 0:
-                    msg = QMessageBox.information(None, "Note!", "There aren't any valid files in that folder.")
-                else: msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
+                delete_folder_mode=self.deleteFolders)    
         except CalledProcessError as e:
-            msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
+            self.finished.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
+                f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}"))
         except FileNotFoundError as e:
-            msg = QMessageBox.critical(None, "Warning!", f"Lookup table error! Please let me know ASAP on Github.\nError text:\n{e}\nCWD:\n{os.getcwd()}")
+            self.finished.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
+                f"Lookup table error! Please let me know ASAP on Github.\nError text:\n{e}\nCWD:\n{os.getcwd()}"))
+        except Exception as e:
+            self.finished.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
+                f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}"))
+        else:
+            self.finished.emit(ThreadResult(True, QMessageBox.information, "Success!",
+                f"{len(data.files)} files successfully packed!"))
+        finally:
+            self.result.emit(data)
+
+class UnpackWorker(QObject):
+    finished = pyqtSignal() #this is so awful.... enum>?????
+    result = pyqtSignal(ThreadResult)
+
+    def __init__(self, sourceDir, destinationDir):
+        super(UnpackWorker, self).__init__()
+        self.dir = dir
+        self.sourceDir = sourceDir
+        self.destinationDir = destinationDir
+
+    def run(self):
+        try:
+            engine.unpackDirectory(self.sourceDir, self.destinationDir)
+        except CalledProcessError as e:
+            self.result.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
+                f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}"))
+        except Exception as e:
+            self.result.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
+                f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}"))
+        else:
+            self.result.emit(ThreadResult(True, QMessageBox.information, "Success!",
+                "Folder unpacked!"))
+        finally:
+            self.finished.emit()
 
 
 if __name__ == "__main__":
