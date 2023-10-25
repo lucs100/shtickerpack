@@ -1,6 +1,7 @@
 #from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTabWidget, QGroupBox, QGridLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox, QSizePolicy, QFrame, QApplication
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 import engine
 import os
 import pathlib
@@ -340,39 +341,66 @@ class ShtickerpackRepackTray(QGridLayout):
         if engine.modExists(self.DEFAULT_OUTPUT_DIR, modName):
             msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder!\n({outputDir})")
             return False
+        #no pre-pack errors, we are good to go
         button.setText("Repacking... just a sec!")
-        try:
-            result: engine.phasePackOverallResult = engine.repackAllLooseFiles(cwd=dir, 
-                                                                        output_dir=outputDir, 
-                                                                        output_name=modName, 
-                                                                        delete_file_mode=deleteFiles, 
-                                                                        delete_folder_mode=deleteFolders)
-            if not result.isClean():
-                #messy, but how do you refactor this?? probably easier to just be explicit
-                if (level4Files := result.getFilesAtLevel(4)) is not None:
-                    msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
-                if (level3Files := result.getFilesAtLevel(3)) is not None:
-                    msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
-                if (level2Files := result.getFilesAtLevel(2)) is not None:
-                    msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-                if (level1Files := result.getFilesAtLevel(1)) is not None:
-                    msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-            if len(result.files) == 0:
-                msg = QMessageBox.information(None, "Note!", "There aren't any valid files in that folder.")
-            else: msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
-        except CalledProcessError as e:
-            msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
-        except FileNotFoundError as e:
-            msg = QMessageBox.critical(None, "Warning!", f"Lookup table error! Please let me know ASAP on Github.\nError text:\n{e}\nCWD:\n{os.getcwd()}")
-        finally:
-            button.setText("Go!")
-        
+        button.setEnabled(False)
+        #incantations to run unpacker as a separate thread, via UnpackWorker()
+        self.thread = QThread()
+        self.worker = UnpackWorker(dir=dir, outputDir=outputDir, modName=modName, deleteFiles=deleteFiles, deleteFolders=deleteFolders)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.thread.finished.connect(self.worker.deleteLater)
+        self.thread.start()
+
+        button.setEnabled(True)
+        button.setText("Go!")
 
 class QHorizontalSpacer(QFrame):
     def __init__(self):
         super(QHorizontalSpacer, self).__init__()
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
+
+class UnpackWorker(QObject):
+    finished = pyqtSignal()
+    #progress = pyqtSignal(int)
+
+    def __init__(self, dir, outputDir, modName, deleteFiles, deleteFolders):
+        super(UnpackWorker, self).__init__()
+        self.dir = dir
+        self.outputDir = outputDir
+        self.modName = modName
+        self.deleteFiles = deleteFiles
+        self.deleteFolders = deleteFolders
+
+    def run(self):
+        """Launch the unpacking process."""
+        try:
+            result: engine.phasePackOverallResult = engine.repackAllLooseFiles(
+                cwd=self.dir, 
+                output_dir=self.outputDir, 
+                output_name=self.modName, 
+                delete_file_mode=self.deleteFiles, 
+                delete_folder_mode=self.deleteFolders)
+            if not result.isClean():
+                #messy, but how do you refactor this?? probably easier to just be explicit
+                if (level4Files := result.getFilesAtLevel(4)) is not None:
+                    msg4 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
+                if (level3Files := result.getFilesAtLevel(3)) is not None:
+                    msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
+                if (level2Files := result.getFilesAtLevel(2)) is not None:
+                    msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+                if (level1Files := result.getFilesAtLevel(1)) is not None:
+                    msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+                if len(result.files) == 0:
+                    msg = QMessageBox.information(None, "Note!", "There aren't any valid files in that folder.")
+                else: msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
+        except CalledProcessError as e:
+            msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
+        except FileNotFoundError as e:
+            msg = QMessageBox.critical(None, "Warning!", f"Lookup table error! Please let me know ASAP on Github.\nError text:\n{e}\nCWD:\n{os.getcwd()}")
+
 
 if __name__ == "__main__":
     #QApplication object is the app, sys.argv are the cmd line args
