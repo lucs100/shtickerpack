@@ -1,10 +1,11 @@
 import os
 import sys
 
-rootpath = os.path.abspath(f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack") #manual, unfortunately
+rootpath = os.path.abspath(f"C:/Users/{os.getlogin()}/Documents/projects/Python/shtickerpack/src") #manual, unfortunately
 sys.path.append(rootpath)
+os.chdir(rootpath)
 
-from src import engine
+import engine
 
 DEFAULT_LOOSE_FILES_DIR = f"C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/loose_files" #could make generic... ehh
 DEFAULT_CONTENTPACKS_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/contentpacks"
