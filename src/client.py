@@ -357,9 +357,13 @@ class ShtickerpackRepackTray(QGridLayout):
                     msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
                 if (level1Files := result.getFilesAtLevel(1)) is not None:
                     msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-            msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
+            if len(result.files) == 0:
+                msg = QMessageBox.information(None, "Note!", "There aren't any valid files in that folder.")
+            else: msg = QMessageBox.information(None, "Success!", f"{len(result.files)} files successfully packed!")
         except CalledProcessError as e:
             msg = QMessageBox.critical(None, "Warning!", f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}")
+        except FileNotFoundError as e:
+            msg = QMessageBox.critical(None, "Warning!", f"Lookup table error! Please let me know ASAP on Github.\nError text:\n{e}\nCWD:\n{os.getcwd()}")
         finally:
             button.setText("Go!")
         
