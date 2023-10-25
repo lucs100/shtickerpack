@@ -2,9 +2,7 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
-import engine
-import os
-import pathlib
+import engine, os, pathlib, debugpy
 from subprocess import CalledProcessError
 
 #to get cmd line args
@@ -349,8 +347,7 @@ class ShtickerpackRepackTray(QGridLayout):
                 msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
             if (level1Files := repackResult.getFilesAtLevel(1)) is not None:
                 msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
-            if len(repackResult.files) == 0:
-                msg = QMessageBox.information(None, "Note!", "There aren't any valid files in that folder.")
+
         
     def handleRepackResultThread(self, threadResult: "ThreadResult"): 
         threadResult.messageType(None, threadResult.title, threadResult.text)
@@ -420,6 +417,7 @@ class RepackWorker(QObject):
 
     def run(self):
         """Launch the unpacking process."""
+        #debugpy.debug_this_thread() #must be done to enable debugging!!!
         try:
             data: engine.phasePackOverallResult = engine.repackAllLooseFiles(
                 cwd=self.dir, 
@@ -429,17 +427,20 @@ class RepackWorker(QObject):
                 delete_folder_mode=self.deleteFolders)    
         except CalledProcessError as e:
             self.finished.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
-                f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}"))
+                f"Multify error! Please let me know ASAP on GitHub.\nError text:\n{e}"))
         except FileNotFoundError as e:
             self.finished.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
                 f"Lookup table error! Please let me know ASAP on Github.\nError text:\n{e}\nCWD:\n{os.getcwd()}"))
         except Exception as e:
             self.finished.emit(ThreadResult(False, QMessageBox.critical, "Warning!",
-                f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e.__dict__}"))
+                f"Unknown error! Please let me know ASAP on GitHub.\nError text:\n{e}"))
         else:
-            self.finished.emit(ThreadResult(True, QMessageBox.information, "Success!",
-                f"{len(data.files)} files successfully packed!"))
-        finally:
+            if len(data.files) == 0:
+                self.finished.emit(ThreadResult(True, QMessageBox.warning, "Note!",
+                    f"There weren't any valid files in that folder!"))
+            else:
+                self.finished.emit(ThreadResult(True, QMessageBox.information, "Success!",
+                    f"{len(data.files)} files successfully packed!"))
             self.result.emit(data)
 
 class UnpackWorker(QObject):
@@ -453,6 +454,7 @@ class UnpackWorker(QObject):
         self.destinationDir = destinationDir
 
     def run(self):
+        #debugpy.debug_this_thread() #must be added/removed manually to debug in thread
         try:
             engine.unpackDirectory(self.sourceDir, self.destinationDir)
         except CalledProcessError as e:

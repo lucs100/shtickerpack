@@ -154,19 +154,23 @@ class phasePackResult:
         return (self.warnings == {})
 
 class phasePackOverallResult:
-    def __init__(self, folders: set = None, files: list = None, warnings: "dict[str: int]" = None):
+    def __init__(self, folders: set = None, files: list = None, warnings: "dict[str: int]" = None, skipped: list = None):
         self.folders: set = folders or set()
         self.files: list = files or list()
         self.warnings: "dict[str: int]" = warnings or dict()
-    
+        self.skipped: list = skipped or list()
+
     def isClean(self) -> bool:
         return (self.warnings == {})
     
     def addResult(self, result: phasePackResult):
-        if result is None: return #file is not a phase file, should warn somehow... oh well #TODO
-        self.folders.update(result.folders)
-        self.files.append(result.file)
-        self.warnings.update(result.warnings)
+        if 4 in result.warnings.values(): #4 = skipped, not in lut
+            self.skipped.append(result.file)
+            self.warnings.update(result.warnings)
+        else:
+            self.folders.update(result.folders)
+            self.files.append(result.file)
+            self.warnings.update(result.warnings)
 
     def getFilesAtLevel(self, queryLevel: int) -> "list[str]":
         output = []
@@ -184,11 +188,12 @@ def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False)
     global PHASE_LUT
     cwd = pathlib.Path(cwd)
     result = phasePackResult()
+    result.file = filename
+
     if filename in PHASE_LUT:
 
         filepaths = PHASE_LUT[filename]['fp']
         fileWarningLevel = PHASE_LUT[filename]['warning_level']
-        result.file = filename
 
         if fileWarningLevel in [0, 1, 2]:
             moved = False
@@ -211,6 +216,7 @@ def moveFileToPhaseStructure(filename: str, cwd: str, delete_mode: bool = False)
         return result
     else:
         result.warnings[filename] = 4 #not found in lut
+        return result
 
 def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackName", 
     strictMode: bool = True, delete_file_mode: bool = False, delete_folder_mode: bool = False):
@@ -232,13 +238,12 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     for item in pathlib.Path(cwd).iterdir():
         if item.is_file():
             result = moveFileToPhaseStructure(item.name, cwd, delete_mode=delete_file_mode)
-            if 4 not in result.warnings.values(): #4 = not in lut
-                overallResult.addResult(result)
+            overallResult.addResult(result)
             if not result.isClean():
                 for file, level in result.warnings.items():
                     print(f"Level {level} warning: {file}") 
     if strictMode:  _repackList(cwd=cwd, folder_list=overallResult.folders, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
-    else:           _repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode)
+    else:           _repackAllInDirectory(cwd=cwd, output_dir=output_dir, output_name=output_name, delete_mode=delete_folder_mode) #why ever use this?
     return overallResult
 
 def modExists(outputDir: str, modName: str) -> bool:
