@@ -107,15 +107,15 @@ def _repackList(cwd: str, folder_list: str, output_name: str = "defaultPackName"
     Moves the output file to output_dir if specified (leaves in-place by default).
     """
     if not isinstance(folder_list, str): #assume iterable 
-        file_list_str = spaceDelimit(folder_list) #no base_dir, as we're in the right cwd
-    if file_list_str == "": return # no files passed
+        folder_list_str = spaceDelimit(folder_list) #no base_dir, as we're in the right cwd
+    if folder_list_str == "": return # no files passed
     
     if output_dir != None: prepDir(output_dir)
     
     print(f"Beginning repack! This may take a few seconds...")
     start = time.time()
-    print(f"\"{MULTIFY_PATH}\" -c -f {output_name}.mf {file_list_str}")
-    subprocess.run(f"\"{MULTIFY_PATH}\" -c -f {output_name}.mf {file_list_str}", shell=True, cwd=cwd, check=True)
+    print(f"\"{MULTIFY_PATH}\" -c -f {output_name}.mf {folder_list_str}")
+    subprocess.run(f"\"{MULTIFY_PATH}\" -c -f {output_name}.mf {folder_list_str}", shell=True, cwd=cwd, check=True)
     end = time.time()
     print(f"Repacked {output_name}.mf! \t took {round(end-start, 2)}s")
     if output_dir != None:
@@ -247,7 +247,7 @@ def repackAllLooseFiles(cwd: str, output_dir = None, output_name = "defaultPackN
     return overallResult
 
 def modExists(outputDir: str, modName: str) -> bool:
-    return pathlib.Path(f"{outputDir}/{modName}.mf").exists()
+    return pathlib.Path(f"{outputDir}/{modName}.mf").exists() or pathlib.Path(f"{outputDir}/{modName}").exists()
 
 
 

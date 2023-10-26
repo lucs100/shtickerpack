@@ -217,7 +217,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         self.worker = UnpackWorker(sourceDir=sourceDir, destinationDir=destinationDir)
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
+        self.worker.success.connect(self.thread.quit)
         self.thread.finished.connect(self.worker.deleteLater)
         self.worker.result.connect(self.handleUnpackResult)
         self.thread.start()
@@ -340,7 +340,7 @@ class ShtickerpackRepackTray(QGridLayout):
         if not repackResult.isClean():
             #messy, but how do you refactor this?? probably easier to just be explicit
             if (level4Files := repackResult.getFilesAtLevel(4)) is not None:
-                msg4 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
+                msg4 = QMessageBox.warning(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
             if (level3Files := repackResult.getFilesAtLevel(3)) is not None:
                 msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
             if (level2Files := repackResult.getFilesAtLevel(2)) is not None:
@@ -356,14 +356,23 @@ class ShtickerpackRepackTray(QGridLayout):
         deleteFiles = self.delFilesModeBox.isChecked()
         deleteFolders = self.delFoldersModeBox.isChecked()
         outputDir = None
-        if self.moveOutputModeBox.isChecked():
-            outputDir = self.DEFAULT_OUTPUT_DIR
-        dir = self.inputDirPath.text()
+        sourceDir = self.inputDirPath.text()
         modName = self.modNameEntry.text()
         if modName.endswith(".mf"): modName = modName[:-3]
+
+        if self.moveOutputModeBox.isChecked():
+            outputDir = self.DEFAULT_OUTPUT_DIR 
+            if engine.modExists(outputDir, modName):
+                msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder!\n({outputDir})")
+                return False
+        else: 
+            if engine.modExists(sourceDir, modName):
+                msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder!\n({sourceDir})")
+                return False
         if not modName.isalnum(): #should refactor these checks but w/e...
             msg = QMessageBox.critical(None, "Invalid mod name!", "Your mod name can only be alphanumeric! Note your mod name shouldn't end with '.mf'.")
             return False
+       
         if engine.modExists(self.DEFAULT_OUTPUT_DIR, modName):
             msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder!\n({outputDir})")
             return False
@@ -373,7 +382,7 @@ class ShtickerpackRepackTray(QGridLayout):
         button.setEnabled(False)
         #incantations to run unpacker as a separate thread, via UnpackWorker()
         self.thread = QThread()
-        self.worker = RepackWorker(dir=dir, outputDir=outputDir, modName=modName, deleteFiles=deleteFiles, deleteFolders=deleteFolders)
+        self.worker = RepackWorker(dir=sourceDir, outputDir=outputDir, modName=modName, deleteFiles=deleteFiles, deleteFolders=deleteFolders)
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.thread.quit)
@@ -444,7 +453,7 @@ class RepackWorker(QObject):
             self.result.emit(data)
 
 class UnpackWorker(QObject):
-    finished = pyqtSignal() #this is so awful.... enum>?????
+    success = pyqtSignal() #this is so awful.... enum>?????
     result = pyqtSignal(ThreadResult)
 
     def __init__(self, sourceDir, destinationDir):
@@ -467,7 +476,7 @@ class UnpackWorker(QObject):
             self.result.emit(ThreadResult(True, QMessageBox.information, "Success!",
                 "Folder unpacked!"))
         finally:
-            self.finished.emit()
+            self.success.emit()
 
 
 if __name__ == "__main__":
