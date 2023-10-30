@@ -35,13 +35,17 @@ REPACK_HELP_STR = ("Once you've unpack the phase files, you can change files and
                    "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
                    "Simply remove any .mf file from this folder to disable it.")
 
+APP_NAME = "repacker"
+ORG_NAME = "lucs100"
+APP_VER = "1.1"
+
 #create a custom subclassed window
 class ShtickerpackMainWindow(QMainWindow):
     def __init__(self):
         #call the init method of QMainWindow
         super().__init__()
 
-        self.setWindowTitle("shtickerpack v1.0")
+        self.setWindowTitle(f"{APP_NAME} v{APP_VER}")
         if getattr(sys, 'frozen', False):
             iconPath = os.path.join(sys._MEIPASS, "./src/assets/shtickerpack.png")
         else: iconPath = "./assets/shtickerpack.png"
@@ -63,7 +67,7 @@ class ShtickerpackMainWindow(QMainWindow):
         self.unpackInfoPanel = ShtickerpackInfoTray(UNPACK_HELP_STR)
         self.unpackInfoGroup = ShtickerpackTitledPanel(self.unpackInfoPanel, "Unpacking Instructions")
         self.unpackInfoGroup.setFixedHeight(110)
-        self.unpackPanel = ShtickerpackUnpackTray()
+        self.unpackPanel = ShtickerpackUnpackTray(self)
         self.unpackGroup = ShtickerpackTitledPanel(self.unpackPanel, "Unpack .mf files")
         self.tab1.layout = QVBoxLayout()
         self.tab1.layout.addWidget(self.unpackInfoGroup)
@@ -74,7 +78,7 @@ class ShtickerpackMainWindow(QMainWindow):
         self.repackInfoPanel = ShtickerpackInfoTray(REPACK_HELP_STR)
         self.repackInfoGroup = ShtickerpackTitledPanel(self.repackInfoPanel, "Repacking Instructions")
         self.repackInfoGroup.setFixedHeight(110)
-        self.repackFilePanel = ShtickerpackRepackTray()
+        self.repackFilePanel = ShtickerpackRepackTray(self)
         self.repackGroup = ShtickerpackTitledPanel(self.repackFilePanel, "Repack assets into .mf files")
         self.tab2.layout = QVBoxLayout()
         self.tab2.layout.addWidget(self.repackInfoGroup)
@@ -101,9 +105,10 @@ class ShtickerpackInfoTray(QGridLayout):
         self.addWidget(self.helpLabel, 0, 0)
 
 class ShtickerpackUnpackTray(QGridLayout):
-    def __init__(self, identifier: str = "UnpackTray"):
+    def __init__(self, parentWindow: QMainWindow, identifier: str = "UnpackTray"):
         super().__init__()
 
+        self.parentWindow = parentWindow
         self.identifier = identifier
         self.DEFAULT_INPUT_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\default"
         self.DEFAULT_OUTPUT_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\vanilla"
@@ -232,9 +237,10 @@ class ShtickerpackUnpackTray(QGridLayout):
         
 
 class ShtickerpackRepackTray(QGridLayout):
-    def __init__(self, identifier: str = "RepackTray"):
+    def __init__(self, parentWindow: QMainWindow, identifier: str = "RepackTray"):
         super().__init__()
 
+        self.parentWindow = parentWindow
         self.identifier = identifier
         self.DEFAULT_LOOSE_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\workspace\\myProject" #TODO: really??
         self.DEFAULT_OUTPUT_DIR = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Corporate Clash\\resources\\contentpacks"
@@ -350,7 +356,7 @@ class ShtickerpackRepackTray(QGridLayout):
 
         
     def handleRepackResultThread(self, threadResult: "ThreadResult"): 
-        threadResult.messageType(None, threadResult.title, threadResult.text)
+        threadResult.messageType(self.parentWindow, threadResult.title, threadResult.text)
     
     def repackTargetDir(self, button: QPushButton):
         deleteFiles = self.delFilesModeBox.isChecked()
@@ -482,6 +488,10 @@ class UnpackWorker(QObject):
 if __name__ == "__main__":
     #QApplication object is the app, sys.argv are the cmd line args
     app = QApplication(sys.argv)
+
+    app.setApplicationName(APP_NAME)
+    app.setOrganizationName(ORG_NAME)
+    app.setApplicationVersion(APP_VER)
 
     #create a widget (the window)
     window = ShtickerpackMainWindow()
