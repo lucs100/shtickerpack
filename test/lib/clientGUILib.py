@@ -29,6 +29,7 @@ class clientGUILib():
 
     def __init__(self):
         self.gui = client.ShtickerpackMainWindow() 
+        self.gui.show()
         self.repackPanel = self.gui.repackFilePanel
         self.TITLE = self.gui.windowTitle()
 
@@ -37,31 +38,16 @@ class clientGUILib():
     
     def set_repack_input(self, fp: str):
         self.repackPanel.inputDirPath.setText(fp)
+        QApplication.processEvents()
 
     def set_repack_output_name(self, name: str):
         self.repackPanel.modNameEntry.setText(name)
+        QApplication.processEvents()
     
     def set_repack_deletion_mode(self, deleteFiles: bool, deleteFolders: bool):
         self.repackPanel.delFilesModeBox.setChecked(deleteFiles)
         self.repackPanel.delFoldersModeBox.setChecked(deleteFolders)
-    
-    def wait_for_dialog(self):
-        if not hasattr(self.repackPanel, "messageBox"):
-            timer = threading.Timer(interval=1, function='wait_for_dialog')
-            return False
-        else:
-            return True
-    
-    def findWindow(self, target):
-        return target in pygetwindow.getAllTitles()
-    
-    def create_msg_box(self):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Icon.Warning)
-        msg.setText("message text")
-        msg.setStandardButtons(QMessageBox.StandardButton.Close)
-        msg.buttonClicked.connect(msg.close)
-        msg.exec()
+        QApplication.processEvents()
         
     def close_active_modals(self):
         """Must be scheduled with a delay before the window is called."""
@@ -73,12 +59,17 @@ class clientGUILib():
             print("Fired!")
             del win
             time.sleep(1)
+            QApplication.processEvents()
+    
+    def verify_no_modals(self):
+        assert not isinstance(QApplication.activeWindow(), QMessageBox), "A modal is still open."
+        QApplication.processEvents()
 
-    def start_repack(self, delay_time=3):
+    def start_gui_repack(self, delay_time=1):
         print("Queueing...")
         threading.Timer(delay_time, self.close_active_modals).start()
         QTest.mouseClick(self.repackPanel.repackButton, Qt.MouseButton.LeftButton)
-
+        QApplication.processEvents()
 
 if __name__ == "__main__":
     try: os.remove("C:\\Users\\Lucas\\AppData\\Local\\Corporate Clash\\resources\\contentpacks\\UITestMod.mf")
@@ -92,7 +83,7 @@ if __name__ == "__main__":
     test.set_repack_input("C:\\Users\\Lucas\\Documents\\projects\\Python\\shtickerpack\\sandbox\\loose_files")
     test.set_repack_output_name("UITestMod")
     test.set_repack_deletion_mode(deleteFiles=False, deleteFolders=True)
-    test.start_repack()
+    test.start_gui_repack()
     input("Continue?")
 
     # test = clientGUILib()
