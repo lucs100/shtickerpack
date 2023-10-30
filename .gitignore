@@ -158,3 +158,5 @@ LUT/temp_lut.json
 !/test
 /BUILD_INFO
 /BUILD_ARTIFACTS
+/test/lib/repro.py
+todo.txt

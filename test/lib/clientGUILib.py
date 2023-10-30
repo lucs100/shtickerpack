@@ -1,6 +1,8 @@
-import os, sys
-
-from PyQt6.QtWidgets import QApplication, QWidget
+import os, sys, time
+from time import sleep
+import threading
+import pygetwindow
+from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt6.QtTest import QTest
 from PyQt6.QtCore import Qt
 
@@ -13,17 +15,22 @@ DEFAULT_CONTENTPACKS_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Cl
 DEFAULT_PHASE_INPUT_DIR = f"C:/Users/{os.getlogin()}/AppData/Local/Corporate Clash/resources/default"
 DEFAULT_PHASE_OUTPUT_DIR =f"C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/example_output" #sorry contributors :( help appreciated
 
-import client
+import client, engine
 
 app = QApplication(sys.argv)
 
-class clientGUILib(object):
+app.setApplicationName(client.APP_NAME)
+app.setOrganizationName(client.ORG_NAME)
+app.setApplicationVersion(client.APP_VER)
+
+class clientGUILib():
     #ROBOT_LIBRARY_VERSION = __version__
     ROBOT_LIBRARY_SCOPE = "GLOBAL"
 
     def __init__(self):
         self.gui = client.ShtickerpackMainWindow() 
         self.repackPanel = self.gui.repackFilePanel
+        self.TITLE = self.gui.windowTitle()
 
     def select_tab(self, tab: int):
         self.gui.tabs.setCurrentIndex(tab)
@@ -38,16 +45,56 @@ class clientGUILib(object):
         self.repackPanel.delFilesModeBox.setChecked(deleteFiles)
         self.repackPanel.delFoldersModeBox.setChecked(deleteFolders)
     
-    def start_repack(self):
+    def wait_for_dialog(self):
+        if not hasattr(self.repackPanel, "messageBox"):
+            timer = threading.Timer(interval=1, function='wait_for_dialog')
+            return False
+        else:
+            return True
+    
+    def findWindow(self, target):
+        return target in pygetwindow.getAllTitles()
+    
+    def create_msg_box(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setText("message text")
+        msg.setStandardButtons(QMessageBox.StandardButton.Close)
+        msg.buttonClicked.connect(msg.close)
+        msg.exec()
+        
+    def close_active_modals(self):
+        """Must be scheduled with a delay before the window is called."""
+        print("Firing....")
+        while isinstance(QApplication.activeWindow(), QMessageBox):
+            win: QMessageBox = QApplication.activeWindow()
+            closeBtn = win.defaultButton()
+            QTest.mouseClick(closeBtn, Qt.MouseButton.LeftButton)
+            print("Fired!")
+            del win
+            time.sleep(1)
+
+    def start_repack(self, delay_time=3):
+        print("Queueing...")
+        threading.Timer(delay_time, self.close_active_modals).start()
         QTest.mouseClick(self.repackPanel.repackButton, Qt.MouseButton.LeftButton)
 
 
 if __name__ == "__main__":
+    try: os.remove("C:\\Users\\Lucas\\AppData\\Local\\Corporate Clash\\resources\\contentpacks\\UITestMod.mf")
+    except: pass
+    app.setApplicationName(client.APP_NAME)
+    app.setOrganizationName(client.ORG_NAME)
+    app.setApplicationVersion(client.APP_VER)
+    
     test = clientGUILib()
     test.select_tab(1)
     test.set_repack_input("C:\\Users\\Lucas\\Documents\\projects\\Python\\shtickerpack\\sandbox\\loose_files")
     test.set_repack_output_name("UITestMod")
     test.set_repack_deletion_mode(deleteFiles=False, deleteFolders=True)
     test.start_repack()
-    input()
-    
+    input("Continue?")
+
+    # test = clientGUILib()
+    # test.create_msg_box()
+    # test.close_active_modal()
