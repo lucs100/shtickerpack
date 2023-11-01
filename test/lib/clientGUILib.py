@@ -1,10 +1,7 @@
-import os, sys, time
-from time import sleep
-import threading
-import pygetwindow
+import os, sys, time, shutil
 from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt6.QtTest import QTest
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 
 rootpath = os.path.abspath(f"C:/Users/Lucas/Documents/projects/Python/shtickerpack/src") #manual, unfortunately
 sys.path.append(rootpath)
@@ -52,22 +49,26 @@ class clientGUILib():
     def close_active_modals(self):
         """Must be scheduled with a delay before the window is called."""
         print("Firing....")
-        while isinstance(QApplication.activeWindow(), QMessageBox):
-            win: QMessageBox = QApplication.activeWindow()
-            closeBtn = win.defaultButton()
-            QTest.mouseClick(closeBtn, Qt.MouseButton.LeftButton)
-            print("Fired!")
-            del win
-            time.sleep(1)
-            QApplication.processEvents()
+        try:
+            while isinstance(QApplication.activeWindow(), QMessageBox):
+                # win: QMessageBox = QApplication.activeWindow()
+                # closeBtn = win.defaultButton()
+                QTest.mouseClick(QApplication.activeWindow().defaultButton(), Qt.MouseButton.LeftButton)
+                print("Fired!")
+                QApplication.processEvents()
+                time.sleep(0.05)
+        except AttributeError:
+            print("AttributeError ignored...")
     
     def verify_no_modals(self):
         assert not isinstance(QApplication.activeWindow(), QMessageBox), "A modal is still open."
         QApplication.processEvents()
 
-    def start_gui_repack(self, delay_time=1):
+    def start_gui_repack(self, delay_time=3000):
         print("Queueing...")
-        threading.Timer(delay_time, self.close_active_modals).start()
+        timer = QTimer.singleShot(delay_time, self.close_active_modals)
+        QApplication.processEvents()
+        #threading.Timer(delay_time, self.close_active_modals).start()
         QTest.mouseClick(self.repackPanel.repackButton, Qt.MouseButton.LeftButton)
         QApplication.processEvents()
 
@@ -79,12 +80,15 @@ if __name__ == "__main__":
     app.setApplicationVersion(client.APP_VER)
     
     test = clientGUILib()
-    test.select_tab(1)
-    test.set_repack_input("C:\\Users\\Lucas\\Documents\\projects\\Python\\shtickerpack\\sandbox\\loose_files")
-    test.set_repack_output_name("UITestMod")
-    test.set_repack_deletion_mode(deleteFiles=False, deleteFolders=True)
-    test.start_gui_repack()
-    input("Continue?")
+    for i in range(0, 1):
+        shutil.copy(
+            "C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/test_good_files/instance_pacesetter_battle.ogg", 
+            "C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/loose_files")
+        test.select_tab(1)
+        test.set_repack_input("C:\\Users\\Lucas\\Documents\\projects\\Python\\shtickerpack\\sandbox\\loose_files")
+        test.set_repack_output_name(f"UITestMod{i}")
+        test.set_repack_deletion_mode(deleteFiles=True, deleteFolders=True)
+        test.start_gui_repack()
 
     # test = clientGUILib()
     # test.create_msg_box()
