@@ -16,7 +16,7 @@ ${LooseFilesClean}           C:/Users/Lucas/Documents/projects/Python/shtickerpa
 ${LooseFilesDuplicate}       C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/test_dupe_files
 ${LooseFilesCleanAndDuplicate}     C:/Users/Lucas/Documents/projects/Python/shtickerpack/sandbox/test_good_and_dupe_files
 ${OutputName}     TEST    
-${MinSize}      10000      #10kb
+${MinSize}      100000      #100kb
 
 *** Test Cases ***
 Repack T0 Without Deletion
@@ -184,4 +184,5 @@ Verify Repack
     Wait Until Created     ${ClashResources}/${OutputName}.mf     timeout=${timeout}
     ${Size} =     Get File Size      ${ClashResources}/${OutputName}.mf
     Should Be True     ${Size} > ${minSize}
-    
+    Log     ${Size}
+    Log     ${MinSize}

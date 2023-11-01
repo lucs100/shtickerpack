@@ -64,7 +64,7 @@ class clientGUILib():
         assert not isinstance(QApplication.activeWindow(), QMessageBox), "A modal is still open."
         QApplication.processEvents()
 
-    def start_gui_repack(self, delay_time=3000):
+    def start_gui_repack(self, delay_time=1000):
         print("Queueing...")
         timer = QTimer.singleShot(delay_time, self.close_active_modals)
         QApplication.processEvents()
