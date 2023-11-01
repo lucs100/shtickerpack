@@ -171,6 +171,12 @@ class phasePackOverallResult:
             self.folders.update(result.folders)
             self.files.append(result.file)
             self.warnings.update(result.warnings)
+    
+    def getMaxWarningLevel(self) -> int:
+        return max(self.warnings.values())
+    
+    def getWarningTypes(self) -> "set[int]":
+        return sorted(set(self.warnings.values()), reverse=True) #descending
 
     def getFilesAtLevel(self, queryLevel: int) -> "list[str]":
         output = []

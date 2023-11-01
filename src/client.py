@@ -196,7 +196,7 @@ class ShtickerpackUnpackTray(QGridLayout):
         return True
     
     def handleUnpackResult(self, result: "ThreadResult"):
-        result.messageType(None, result.title, result.text)
+        msg = result.messageType(None, result.title, result.text)
     
     def unpackTargetDir(self, button: QPushButton):
         sourceDir = self.inputDirPath.text()
@@ -344,15 +344,28 @@ class ShtickerpackRepackTray(QGridLayout):
     
     def handleRepackResultData(self, repackResult: engine.phasePackOverallResult):
         if not repackResult.isClean():
+            messageTypes: tuple(QMessageBox, str) = {
+                4: (QMessageBox.critical, "Warning!"),
+                3: (QMessageBox.warning, "Warning!"),
+                2: (QMessageBox.warning, "Note!"),
+                1: (QMessageBox.information, "Note!"),
+            }
+            maxLevel = repackResult.getMaxWarningLevel()
+            messageClass, title = messageTypes[maxLevel]
+
+            warningStr = ""
+
             #messy, but how do you refactor this?? probably easier to just be explicit
             if (level4Files := repackResult.getFilesAtLevel(4)) is not None:
-                msg4 = QMessageBox.warning(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.")
+                warningStr += f"Shtickerpack skipped the following files:\n\n{level4Files}\n\nThis file doesn't seem to be part of Clash's resources. If you're sure this is a mistake, let me know on Github.\n"
             if (level3Files := repackResult.getFilesAtLevel(3)) is not None:
-                msg3 = QMessageBox.critical(None, "Warning!", f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.")
+                warningStr += f"Shtickerpack skipped the following files:\n\n{level3Files}\n\nClash has multiple different files with these names, so shtickerpack can't tell which one you mean right now. This will be added eventually - let me know on GitHub that you ran into this.\n"
             if (level2Files := repackResult.getFilesAtLevel(2)) is not None:
-                msg2 = QMessageBox.warning(None, "Note!", f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+                warningStr += f"The following files were successfully added:\n\n{level2Files}\n\nClash has extremely similar versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is likely fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.\n"
             if (level1Files := repackResult.getFilesAtLevel(1)) is not None:
-                msg1 = QMessageBox.information(None, "Note!", f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.")
+                warningStr += f"The following files were successfully added:\n\n{level1Files}\n\nClash has identical versions of these files with the same name - shtickerpack can't tell which one you meant to change, so it added both. This is probably fine but may cause some unexpected behaviour - let me know on Github if you have any weird behaviour in-game.\n"
+
+            msg = messageClass(None, title, warningStr.strip())
 
         
     def handleRepackResultThread(self, threadResult: "ThreadResult"): 
