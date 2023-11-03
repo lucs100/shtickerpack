@@ -35,7 +35,7 @@ REPACK_HELP_STR = ("Once you've unpack the phase files, you can change files and
                    "Clash will automatically use any packed files in the <b><code>/contentpacks/</code></b> folder in-game. "+
                    "Simply remove any .mf file from this folder to disable it.")
 
-APP_NAME = "repacker"
+APP_NAME = "shtickerpack"
 ORG_NAME = "lucs100"
 APP_VER = "1.1"
 
@@ -391,7 +391,7 @@ class ShtickerpackRepackTray(QGridLayout):
         if not modName.isalnum(): #should refactor these checks but w/e...
             msg = QMessageBox.critical(None, "Invalid mod name!", "Your mod name can only be alphanumeric! Note your mod name shouldn't end with '.mf'.")
             return False
-       
+        
         if engine.modExists(self.DEFAULT_OUTPUT_DIR, modName):
             msg = QMessageBox.critical(None, "Mod already exists!", f"{modName}.mf already exists in the output folder!\n({outputDir})")
             return False

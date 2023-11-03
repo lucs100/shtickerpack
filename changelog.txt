@@ -1,3 +1,9 @@
+v1.1 - November 3, 2023
+Focus on major performance improvements! Details:
+* Unpacks and repacks now run in the backround instead of freezing the app temporarily.
+* Merged repack warning popups into a single popup. This is still a bit ugly right now, but a fix is in development.
+
+
 v1.0 - October 23, 2023
 Initial release of shtickerpack! Supports:
 * Unpacking .mf files. Automatically tries to locate a Clash installation to do so.
